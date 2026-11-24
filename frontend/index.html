@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10111b">
+  <meta name="description" content="AtendeAI — classificação e encaminhamento inteligente de atendimentos.">
+  <title>AtendeAI — Central de atendimento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/variables.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="/assets/css/animations.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+      <a class="brand" href="#overview" aria-label="AtendeAI — início">
+        <span class="brand-mark"><i data-lucide="orbit"></i></span>
+        <span class="brand-copy"><strong>Atende<span>AI</span></strong><small>INTELLIGENT CARE</small></span>
+      </a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="overview"><i data-lucide="layout-dashboard"></i><span>Visão geral</span></button>
+        <button class="nav-item" data-view="new"><i data-lucide="sparkles"></i><span>Novo atendimento</span><span class="nav-plus">+</span></button>
+        <button class="nav-item" data-view="inbox"><i data-lucide="inbox"></i><span>Inbox</span></button>
+        <button class="nav-item" data-view="analytics"><i data-lucide="chart-no-axes-combined"></i><span>Analytics</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-status"><span class="status-orb"></span><span><strong>Central ativa</strong><small>AtendeAI · v1.0</small></span><i data-lucide="ellipsis"></i></div>
+        <button class="nav-item" data-view="settings"><i data-lucide="settings-2"></i><span>Configurações</span></button>
+        <div class="sidebar-footnote">IA que organiza.<br><span>Atendimento que aproxima.</span></div>
+      </div>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="menu-toggle" aria-label="Abrir navegação"><i data-lucide="menu"></i></button>
+        <div class="breadcrumb"><span>AtendeAI</span><i data-lucide="chevron-right"></i><strong id="page-breadcrumb">Visão geral</strong></div>
+        <div class="topbar-actions">
+          <div class="service-indicator" id="api-indicator"><span class="status-dot"></span><span>API</span></div>
+          <button class="icon-button" id="theme-toggle" aria-label="Alternar tema"><i data-lucide="moon"></i></button>
+          <button class="button button-primary top-new" data-go="new"><i data-lucide="plus"></i><span>Novo atendimento</span></button>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <section class="view active" id="view-overview" data-title="Visão geral">
+          <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> CENTRAL DE INTELIGÊNCIA</div><h1>Visão geral<span class="heading-period">.</span></h1><p>Acompanhe seus atendimentos e a operação em tempo real.</p></div><span class="date-chip" id="today-label"></span></div>
+          <div class="stats-grid dashboard-stats" id="overview-stats" aria-live="polite"><div class="skeleton stat-skeleton"></div><div class="skeleton stat-skeleton"></div><div class="skeleton stat-skeleton"></div><div class="skeleton stat-skeleton"></div><div class="skeleton stat-skeleton"></div></div>
+          <div class="dashboard-grid">
+            <article class="panel chart-panel chart-wide"><div class="panel-heading"><div><span class="panel-kicker">VOLUME</span><h2>Atendimentos ao longo do tempo</h2></div><span class="quiet-tag">Últimos 14 dias</span></div><div class="chart-wrap"><canvas id="overview-timeline" aria-label="Gráfico de atendimentos por dia"></canvas><p class="empty-inline" id="timeline-empty" hidden>Nenhum atendimento registrado neste período.</p></div></article>
+            <article class="panel chart-panel"><div class="panel-heading"><div><span class="panel-kicker">DISTRIBUIÇÃO</span><h2>Por categoria</h2></div></div><div class="chart-wrap chart-doughnut"><canvas id="overview-category" aria-label="Distribuição de atendimentos por categoria"></canvas><p class="empty-inline" id="category-empty" hidden>Os dados aparecerão após os primeiros atendimentos.</p></div></article>
+            <article class="panel chart-panel"><div class="panel-heading"><div><span class="panel-kicker">DISTRIBUIÇÃO</span><h2>Por departamento</h2></div></div><div class="chart-wrap chart-doughnut"><canvas id="overview-department" aria-label="Distribuição de atendimentos por departamento"></canvas><p class="empty-inline" id="department-empty" hidden>Os dados aparecerão após os primeiros atendimentos.</p></div></article>
+            <article class="panel chart-panel"><div class="panel-heading"><div><span class="panel-kicker">DISTRIBUIÇÃO</span><h2>Por prioridade</h2></div></div><div class="chart-wrap chart-doughnut"><canvas id="overview-priority" aria-label="Distribuição de atendimentos por prioridade"></canvas><p class="empty-inline" id="priority-empty" hidden>Os dados aparecerão após os primeiros atendimentos.</p></div></article>
+            <article class="panel recent-panel"><div class="panel-heading"><div><span class="panel-kicker">ATIVIDADE</span><h2>Atendimentos recentes</h2></div><button class="text-button" data-go="inbox">Ver inbox <i data-lucide="arrow-up-right"></i></button></div><div id="recent-list" class="recent-list"><div class="skeleton row-skeleton"></div><div class="skeleton row-skeleton"></div><div class="skeleton row-skeleton"></div></div></article>
+            <article class="panel routing-panel"><div class="panel-heading"><div><span class="panel-kicker">INTEGRAÇÕES</span><h2>Status dos serviços</h2></div><span class="integration-icon"><i data-lucide="activity"></i></span></div><div id="service-status" class="service-list"><div class="skeleton row-skeleton"></div><div class="skeleton row-skeleton"></div><div class="skeleton row-skeleton"></div></div><div class="panel-note"><i data-lucide="shield-check"></i><span>Seus dados são processados com segurança pela API.</span></div></article>
+          </div>
+        </section>
+
+        <section class="view" id="view-new" data-title="Novo atendimento">
+          <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> CLASSIFICAÇÃO INTELIGENTE</div><h1>Novo atendimento<span class="heading-period">.</span></h1><p>Envie uma mensagem para análise e encaminhamento.</p></div></div>
+          <div class="compose-layout">
+            <form class="panel compose-panel" id="attendance-form">
+              <div class="panel-heading"><div><span class="panel-kicker">MENSAGEM DO CLIENTE</span><h2>Conte o que aconteceu</h2></div><span class="ai-pill"><i data-lucide="sparkles"></i> Análise por IA</span></div>
+              <div class="form-grid"><label class="field"><span>Nome do cliente <small>Opcional</small></span><input name="customer_name" maxlength="160" placeholder="Ex.: Ana Souza" autocomplete="name"></label><label class="field"><span>E-mail <small>Opcional</small></span><input name="customer_email" type="email" maxlength="254" placeholder="ana@exemplo.com" autocomplete="email"></label></div>
+              <label class="field"><span>Origem do atendimento</span><select name="source"><option value="web">Website</option><option value="email">E-mail</option><option value="whatsapp">WhatsApp</option><option value="phone">Telefone</option><option value="other">Outro</option></select></label>
+              <label class="field message-field"><span>Mensagem <b class="required-mark">*</b></span><textarea name="message" required minlength="1" maxlength="10000" rows="8" placeholder="Descreva a mensagem recebida do cliente..."></textarea><small class="field-hint"><i data-lucide="lock-keyhole"></i> A mensagem será usada somente para análise do atendimento. <span id="message-count">0 / 10000</span></small></label>
+              <div class="form-footer"><span><i data-lucide="info"></i> Nome e e-mail são opcionais.</span><button class="button button-primary" type="submit" id="submit-attendance"><i data-lucide="sparkles"></i> Analisar atendimento</button></div>
+              <div id="form-error" class="alert alert-error" role="alert" hidden></div>
+            </form>
+            <aside class="compose-aside"><article class="ai-note"><div class="ai-note-icon"><i data-lucide="scan-search"></i></div><span class="panel-kicker">O QUE A IA ANALISA</span><h3>Uma leitura completa, não só palavras-chave.</h3><p>A mensagem é classificada por assunto, departamento, prioridade e sentimento. Casos ambíguos são sinalizados para revisão humana.</p><div class="analysis-tags"><span>Categoria</span><span>Departamento</span><span>Prioridade</span><span>Sentimento</span></div></article><div class="privacy-note"><i data-lucide="shield"></i><span><strong>Privacidade em primeiro lugar</strong><br>Credenciais e chaves nunca são expostas nesta interface.</span></div></aside>
+          </div>
+          <div id="classification-result" class="result-area" aria-live="polite"></div>
+        </section>
+
+        <section class="view" id="view-inbox" data-title="Inbox">
+          <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> CENTRAL DE ATENDIMENTOS</div><h1>Inbox<span class="heading-period">.</span></h1><p>Encontre e acompanhe todos os atendimentos recebidos.</p></div><button class="button button-primary" data-go="new"><i data-lucide="plus"></i> Novo atendimento</button></div>
+          <div class="panel inbox-panel"><form class="filter-bar" id="inbox-filters"><label class="search-field"><i data-lucide="search"></i><input name="search" placeholder="Buscar mensagem, cliente ou ID..." aria-label="Buscar atendimentos"></label><select name="category" aria-label="Filtrar por categoria"><option value="">Todas categorias</option><option value="question">Dúvida</option><option value="complaint">Reclamação</option><option value="request">Solicitação</option><option value="compliment">Elogio</option><option value="other">Outro</option></select><select name="department" aria-label="Filtrar por departamento"><option value="">Todos departamentos</option><option value="support">Suporte</option><option value="financial">Financeiro</option><option value="commercial">Comercial</option><option value="customer_service">Atendimento</option></select><select name="priority" aria-label="Filtrar por prioridade"><option value="">Todas prioridades</option><option value="low">Baixa</option><option value="medium">Média</option><option value="high">Alta</option><option value="critical">Crítica</option></select><select name="status" aria-label="Filtrar por status"><option value="">Todos status</option><option value="routed">Encaminhado</option><option value="routing_failed">Falha no encaminhamento</option><option value="pending_review">Revisão humana</option><option value="classified">Classificado</option></select><select name="requires_human_review" aria-label="Filtrar por revisão humana"><option value="">Revisão: qualquer</option><option value="true">Revisão necessária</option><option value="false">Sem revisão pendente</option></select><select name="sort" aria-label="Ordenar atendimentos"><option value="desc">Mais recentes</option><option value="asc">Mais antigos</option></select><button class="button button-subtle filter-submit" type="submit"><i data-lucide="list-filter"></i><span>Filtrar</span></button></form>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>ATENDIMENTO</th><th>CATEGORIA</th><th>DEPARTAMENTO</th><th>PRIORIDADE</th><th>STATUS</th><th>DATA</th><th><span class="sr-only">Ações</span></th></tr></thead><tbody id="inbox-body"><tr><td colspan="7"><div class="table-loading"><span class="spinner"></span> Carregando atendimentos...</div></td></tr></tbody></table></div>
+            <div class="inbox-footer"><span id="inbox-count">—</span><div class="pagination"><button class="icon-button" id="page-prev" aria-label="Página anterior" disabled><i data-lucide="chevron-left"></i></button><span id="page-label">1</span><button class="icon-button" id="page-next" aria-label="Próxima página" disabled><i data-lucide="chevron-right"></i></button></div></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-analytics" data-title="Analytics">
+          <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> DADOS PARA DECISÕES</div><h1>Analytics<span class="heading-period">.</span></h1><p>Entenda os padrões dos atendimentos registrados.</p></div><label class="period-select"><span class="sr-only">Período do volume de atendimentos</span><select id="analytics-days"><option value="7">Últimos 7 dias</option><option value="14" selected>Últimos 14 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></label></div>
+          <div class="stats-grid analytics-stats" id="analytics-stats"></div>
+          <div class="analytics-grid"><article class="panel chart-panel chart-wide"><div class="panel-heading"><div><span class="panel-kicker">TENDÊNCIA</span><h2>Volume de atendimentos</h2></div></div><div class="chart-wrap"><canvas id="analytics-timeline"></canvas><p class="empty-inline" id="analytics-timeline-empty" hidden>Nenhum dado disponível neste período.</p></div></article><article class="panel chart-panel"><div class="panel-heading"><div><span class="panel-kicker">ASSUNTO</span><h2>Por categoria</h2></div></div><div class="chart-wrap chart-doughnut"><canvas id="analytics-category"></canvas><p class="empty-inline" id="analytics-category-empty" hidden>Sem dados para exibir.</p></div></article><article class="panel chart-panel"><div class="panel-heading"><div><span class="panel-kicker">PERFIL</span><h2>Por departamento</h2></div></div><div class="chart-wrap chart-doughnut"><canvas id="analytics-department"></canvas><p class="empty-inline" id="analytics-department-empty" hidden>Sem dados para exibir.</p></div></article><article class="panel chart-panel"><div class="panel-heading"><div><span class="panel-kicker">URGÊNCIA</span><h2>Por prioridade</h2></div></div><div class="chart-wrap chart-doughnut"><canvas id="analytics-priority"></canvas><p class="empty-inline" id="analytics-priority-empty" hidden>Sem dados para exibir.</p></div></article><article class="panel chart-panel"><div class="panel-heading"><div><span class="panel-kicker">TOM</span><h2>Por sentimento</h2></div></div><div class="chart-wrap chart-doughnut"><canvas id="analytics-sentiment"></canvas><p class="empty-inline" id="analytics-sentiment-empty" hidden>Sem dados para exibir.</p></div></article></div>
+        </section>
+
+        <section class="view" id="view-settings" data-title="Configurações">
+          <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> PREFERÊNCIAS</div><h1>Configurações<span class="heading-period">.</span></h1><p>Personalize sua experiência e consulte o estado da aplicação.</p></div></div>
+          <div class="settings-grid"><article class="panel settings-card"><div class="settings-icon"><i data-lucide="palette"></i></div><div><span class="panel-kicker">APARÊNCIA</span><h2>Tema da interface</h2><p>Escolha uma aparência confortável para acompanhar seus atendimentos.</p></div><div class="theme-options"><button class="theme-option" data-theme-choice="light"><i data-lucide="sun"></i><span>Claro</span></button><button class="theme-option" data-theme-choice="dark"><i data-lucide="moon"></i><span>Escuro</span></button><button class="theme-option" data-theme-choice="system"><i data-lucide="laptop"></i><span>Sistema</span></button></div></article>
+            <article class="panel settings-card"><div class="settings-icon"><i data-lucide="radio-tower"></i></div><div><span class="panel-kicker">ESTADO DOS SERVIÇOS</span><h2>Integrações</h2><p>O painel mostra configuração, não substitui a validação de conectividade externa.</p></div><div id="settings-services" class="service-list settings-service-list"></div></article>
+            <article class="panel settings-card about-card"><div class="settings-icon"><i data-lucide="orbit"></i></div><div><span class="panel-kicker">SOBRE</span><h2>AtendeAI <span class="version-pill">v1.0.0</span></h2><p>Classificação e encaminhamento inteligente de mensagens de clientes.</p><div class="about-meta"><span>FastAPI</span><span>SQLite</span><span>n8n</span><span>HTML · CSS · JS</span></div></div></article>
+            <article class="panel settings-card privacy-card"><div class="settings-icon"><i data-lucide="lock-keyhole"></i></div><div><span class="panel-kicker">SEGURANÇA</span><h2>Ambiente demonstrativo</h2><p>Não há login de usuário nesta versão. Segredos de integração são configurados no backend e não são apresentados nesta tela.</p></div></article>
+          </div>
+        </section>
+      </main>
+      <footer class="app-footer"><span>AtendeAI <span class="footer-dot">·</span> Central de inteligência para atendimento</span><span>Feito para cuidar melhor.</span></footer>
+    </div>
+  </div>
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true"></div>
+  <dialog class="detail-dialog" id="detail-dialog" aria-labelledby="detail-title"><div id="detail-content"></div></dialog>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script type="module" src="/assets/js/app.js"></script>
+</body>
+</html>

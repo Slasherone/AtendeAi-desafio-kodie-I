@@ -1,0 +1,189 @@
+{
+  "name": "AtendeAI — Roteamento de atendimentos",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "atendeai/route",
+        "responseMode": "responseNode",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b101",
+      "name": "Webhook AtendeAI",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 360],
+      "webhookId": "atendeai-routing-webhook",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURE_WEBHOOK_HEADER_AUTH",
+          "name": "AtendeAI Webhook Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json.body ?? {};\nconst allowed = ['support', 'financial', 'commercial', 'customer_service'];\nconst problems = [];\nif (typeof input.attendance_id !== 'string' || !input.attendance_id) problems.push('attendance_id ausente');\nif (typeof input.idempotency_key !== 'string' || !input.idempotency_key) problems.push('idempotency_key ausente');\nif (!allowed.includes(input.department)) problems.push('departamento desconhecido');\nif (input.requires_human_review === true) problems.push('revisão humana pendente');\nreturn [{ json: { ...input, valid: problems.length === 0, validation_error: problems.join('; ') } }];"
+      },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b102",
+      "name": "Validar payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 360]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [{ "id": "valid-payload", "leftValue": "={{ $json.valid }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b103",
+      "name": "Payload válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [680, 360]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $json.department }}", "rightValue": "support", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $json.department }}", "rightValue": "financial", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $json.department }}", "rightValue": "commercial", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $json.department }}", "rightValue": "customer_service", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b104",
+      "name": "Roteamento por departamento",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": { "assignments": { "assignments": [{ "id": "support-attendance", "name": "attendance_id", "value": "={{ $json.attendance_id }}", "type": "string" }, { "id": "support-department", "name": "department", "value": "support", "type": "string" }, { "id": "support-status", "name": "status", "value": "completed", "type": "string" }, { "id": "support-execution", "name": "execution_id", "value": "={{ $execution.id }}", "type": "string" }] }, "options": { "includeOtherFields": true } },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b105",
+      "name": "Destino — Suporte",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1130, 80]
+    },
+    {
+      "parameters": { "assignments": { "assignments": [{ "id": "financial-attendance", "name": "attendance_id", "value": "={{ $json.attendance_id }}", "type": "string" }, { "id": "financial-department", "name": "department", "value": "financial", "type": "string" }, { "id": "financial-status", "name": "status", "value": "completed", "type": "string" }, { "id": "financial-execution", "name": "execution_id", "value": "={{ $execution.id }}", "type": "string" }] }, "options": { "includeOtherFields": true } },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b106",
+      "name": "Destino — Financeiro",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1130, 220]
+    },
+    {
+      "parameters": { "assignments": { "assignments": [{ "id": "commercial-attendance", "name": "attendance_id", "value": "={{ $json.attendance_id }}", "type": "string" }, { "id": "commercial-department", "name": "department", "value": "commercial", "type": "string" }, { "id": "commercial-status", "name": "status", "value": "completed", "type": "string" }, { "id": "commercial-execution", "name": "execution_id", "value": "={{ $execution.id }}", "type": "string" }] }, "options": { "includeOtherFields": true } },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b107",
+      "name": "Destino — Comercial",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1130, 360]
+    },
+    {
+      "parameters": { "assignments": { "assignments": [{ "id": "service-attendance", "name": "attendance_id", "value": "={{ $json.attendance_id }}", "type": "string" }, { "id": "service-department", "name": "department", "value": "customer_service", "type": "string" }, { "id": "service-status", "name": "status", "value": "completed", "type": "string" }, { "id": "service-execution", "name": "execution_id", "value": "={{ $execution.id }}", "type": "string" }] }, "options": { "includeOtherFields": true } },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b108",
+      "name": "Destino — Atendimento geral",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1130, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'http://api:8000/api/v1/internal/attendances/' + $json.attendance_id + '/route' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { department: $json.department, status: $json.status, execution_id: $json.execution_id } }}",
+        "options": { "response": { "response": { "fullResponse": true, "neverError": true } } }
+      },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b109",
+      "name": "Registrar encaminhamento no FastAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1380, 290],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURE_INTERNAL_API_HEADER_AUTH",
+          "name": "AtendeAI Internal API Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [{ "id": "validation-failed-status", "name": "status", "value": "failed", "type": "string" }, { "id": "validation-failed-code", "name": "http_status", "value": 422, "type": "number" }, { "id": "validation-failed-message", "name": "error_message", "value": "={{ $json.validation_error || 'Departamento desconhecido.' }}", "type": "string" }] },
+        "options": { "includeOtherFields": true }
+      },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b110",
+      "name": "Payload inválido",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [900, 640]
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [{ "id": "unknown-status", "name": "status", "value": "failed", "type": "string" }, { "id": "unknown-code", "name": "http_status", "value": 422, "type": "number" }, { "id": "unknown-message", "name": "error_message", "value": "Departamento desconhecido.", "type": "string" }] },
+        "options": { "includeOtherFields": true }
+      },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b111",
+      "name": "Departamento sem rota",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1130, 680]
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [{ "id": "automation-error-status", "name": "status", "value": "failed", "type": "string" }, { "id": "automation-error-code", "name": "http_status", "value": 502, "type": "number" }, { "id": "automation-error-message", "name": "error_message", "value": "={{ $json.error?.message || $json.message || 'Falha no node HTTP Request ao registrar no FastAPI.' }}", "type": "string" }] },
+        "options": { "includeOtherFields": true }
+      },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b112",
+      "name": "Falha ao registrar",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1600, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body || { status: $json.status, department: $json.department, execution_id: $json.execution_id, error_message: $json.error_message } }}",
+        "options": { "responseCode": "={{ $json.statusCode || $json.http_status || 200 }}" }
+      },
+      "id": "7c5a1d0e-32f4-44b7-9a53-11c1f2a8b113",
+      "name": "Responder ao FastAPI",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1810, 360]
+    }
+  ],
+  "connections": {
+    "Webhook AtendeAI": { "main": [[{ "node": "Validar payload", "type": "main", "index": 0 }]] },
+    "Validar payload": { "main": [[{ "node": "Payload válido?", "type": "main", "index": 0 }]] },
+    "Payload válido?": { "main": [[{ "node": "Roteamento por departamento", "type": "main", "index": 0 }], [{ "node": "Payload inválido", "type": "main", "index": 0 }]] },
+    "Roteamento por departamento": { "main": [[{ "node": "Destino — Suporte", "type": "main", "index": 0 }], [{ "node": "Destino — Financeiro", "type": "main", "index": 0 }], [{ "node": "Destino — Comercial", "type": "main", "index": 0 }], [{ "node": "Destino — Atendimento geral", "type": "main", "index": 0 }], [{ "node": "Departamento sem rota", "type": "main", "index": 0 }]] },
+    "Destino — Suporte": { "main": [[{ "node": "Registrar encaminhamento no FastAPI", "type": "main", "index": 0 }]] },
+    "Destino — Financeiro": { "main": [[{ "node": "Registrar encaminhamento no FastAPI", "type": "main", "index": 0 }]] },
+    "Destino — Comercial": { "main": [[{ "node": "Registrar encaminhamento no FastAPI", "type": "main", "index": 0 }]] },
+    "Destino — Atendimento geral": { "main": [[{ "node": "Registrar encaminhamento no FastAPI", "type": "main", "index": 0 }]] },
+    "Registrar encaminhamento no FastAPI": { "main": [[{ "node": "Responder ao FastAPI", "type": "main", "index": 0 }], [{ "node": "Falha ao registrar", "type": "main", "index": 0 }]] },
+    "Payload inválido": { "main": [[{ "node": "Responder ao FastAPI", "type": "main", "index": 0 }]] },
+    "Departamento sem rota": { "main": [[{ "node": "Responder ao FastAPI", "type": "main", "index": 0 }]] },
+    "Falha ao registrar": { "main": [[{ "node": "Responder ao FastAPI", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "a6ac418e-2d2d-44eb-8e4b-96e7dfe4f5d0",
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": []
+}

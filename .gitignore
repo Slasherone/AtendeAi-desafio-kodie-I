@@ -1,0 +1,17 @@
+.env
+.venv/
+.venv*/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+data/*
+!data/.gitkeep
+n8n_data/
+node_modules/
+Thumbs.db
+.DS_Store
