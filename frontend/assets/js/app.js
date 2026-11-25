@@ -7,6 +7,7 @@ import { badge, escapeHtml, formatDate, labels, notify, statusClass } from './ui
 
 const viewLabels = Object.fromEntries([...document.querySelectorAll('.view')].map((view) => [view.id.replace('view-', ''), view.dataset.title]));
 let loadedViews = new Set();
+let setSidebarOpen = () => {};
 
 function applyTheme(choice) {
   const resolved = choice === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : choice;
@@ -46,7 +47,7 @@ async function navigate(viewName, updateHash = true) {
   document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === `view-${name}`));
   document.querySelectorAll('.nav-item[data-view]').forEach((button) => button.classList.toggle('active', button.dataset.view === name));
   document.querySelector('#page-breadcrumb').textContent = viewLabels[name];
-  document.querySelector('#sidebar').classList.remove('open');
+  setSidebarOpen(false);
   if (updateHash) history.replaceState(null, '', `#${name}`);
   if (!loadedViews.has(name) || name === 'inbox') {
     if (name === 'overview') await loadDashboard().catch((error) => notify(error.message, 'error'));
@@ -109,12 +110,33 @@ function setupForm() {
 }
 
 function setupNavigation() {
+  const sidebar = document.querySelector('#sidebar');
+  const menuToggle = document.querySelector('#menu-toggle');
+  const mobileNavigation = matchMedia('(max-width: 800px)');
+  setSidebarOpen = (open) => {
+    const expanded = mobileNavigation.matches && open;
+    sidebar.classList.toggle('open', expanded);
+    sidebar.inert = mobileNavigation.matches && !expanded;
+    menuToggle.setAttribute('aria-expanded', String(expanded));
+    menuToggle.setAttribute('aria-label', expanded ? 'Fechar navegação' : 'Abrir navegação');
+    if (mobileNavigation.matches && !expanded && sidebar.contains(document.activeElement)) {
+      menuToggle.focus({ preventScroll: true });
+    }
+  };
+  setSidebarOpen(false);
+  mobileNavigation.addEventListener?.('change', () => setSidebarOpen(false));
   document.querySelectorAll('.nav-item[data-view]').forEach((button) => button.addEventListener('click', () => navigate(button.dataset.view)));
   document.querySelectorAll('[data-go]').forEach((button) => button.addEventListener('click', () => navigate(button.dataset.go)));
-  document.querySelector('#menu-toggle').addEventListener('click', () => document.querySelector('#sidebar').classList.toggle('open'));
+  menuToggle.addEventListener('click', () => {
+    const opening = !sidebar.classList.contains('open');
+    setSidebarOpen(opening);
+    if (opening) sidebar.querySelector('.nav-item[data-view]')?.focus();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && sidebar.classList.contains('open')) setSidebarOpen(false);
+  });
   document.addEventListener('click', (event) => {
-    const sidebar = document.querySelector('#sidebar');
-    if (sidebar.classList.contains('open') && !sidebar.contains(event.target) && !event.target.closest('#menu-toggle')) sidebar.classList.remove('open');
+    if (sidebar.classList.contains('open') && !sidebar.contains(event.target) && !event.target.closest('#menu-toggle')) setSidebarOpen(false);
   });
   window.addEventListener('hashchange', () => navigate(location.hash.slice(1), false));
   document.querySelector('#today-label').textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).format(new Date());

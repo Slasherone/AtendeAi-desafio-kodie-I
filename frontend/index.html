@@ -17,7 +17,7 @@
 <body>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
-      <a class="brand" href="#overview" aria-label="AtendeAI — início">
+      <a class="brand" href="#overview">
         <span class="brand-mark"><i data-lucide="orbit"></i></span>
         <span class="brand-copy"><strong>Atende<span>AI</span></strong><small>INTELLIGENT CARE</small></span>
       </a>
@@ -37,12 +37,12 @@
 
     <div class="main-shell">
       <header class="topbar">
-        <button class="icon-button mobile-menu" id="menu-toggle" aria-label="Abrir navegação"><i data-lucide="menu"></i></button>
+        <button class="icon-button mobile-menu" id="menu-toggle" aria-label="Abrir navegação" aria-controls="sidebar" aria-expanded="false"><i data-lucide="menu"></i></button>
         <div class="breadcrumb"><span>AtendeAI</span><i data-lucide="chevron-right"></i><strong id="page-breadcrumb">Visão geral</strong></div>
         <div class="topbar-actions">
           <div class="service-indicator" id="api-indicator"><span class="status-dot"></span><span>API</span></div>
           <button class="icon-button" id="theme-toggle" aria-label="Alternar tema"><i data-lucide="moon"></i></button>
-          <button class="button button-primary top-new" data-go="new"><i data-lucide="plus"></i><span>Novo atendimento</span></button>
+          <button class="button button-primary top-new" data-go="new" aria-label="Novo atendimento"><i data-lucide="plus"></i><span>Novo atendimento</span></button>
         </div>
       </header>
 

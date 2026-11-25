@@ -1,11 +1,17 @@
 # Capturas de execução
 
-As imagens abaixo devem ser feitas com o AtendeAI e o n8n efetivamente executados; não use mockups ou telas simuladas como evidência.
+As capturas de frontend são feitas pelo Playwright no AtendeAI efetivamente executado, com dados reais da API. O script recusa a captura quando há atendimentos no banco; não use mockups ou telas simuladas como evidência.
 
 - `workflow/`: visão completa do workflow n8n ativo.
 - `executions/`: execução real bem-sucedida e, se disponível, tratamento de falha.
 - `nodes/`: configuração dos nodes, ocultando valores de credenciais.
 - `results/`: payload/resultados da execução, sem dados pessoais ou segredos.
-- `frontend/`: Dashboard, Novo atendimento, resultado, Inbox, detalhes, Analytics e temas.
+- `frontend/`: Dashboard, Novo atendimento, Inbox, Analytics, temas e viewport mobile.
 
-Captura disponível: `frontend/dashboard.png`, registrada em 2026-11-24 com o dashboard real em execução, API conectada e estado vazio (sem atendimentos). As capturas das demais telas, mobile, resultado/detalhes e do n8n ainda dependem de navegação e execução visual adicionais; esta imagem isolada não valida a interface completa nem o workflow visualmente.
+Capturas reais disponíveis:
+
+- `frontend/dashboard.png`: dashboard com API conectada e banco vazio, capturado anteriormente.
+- `frontend/new-attendance.png`, `inbox.png`, `analytics.png`, `settings-dark.png` e `settings-light.png`: desktop, banco vazio.
+- `frontend/mobile-dashboard.png` e `frontend/mobile-inbox.png`: viewport móvel, banco vazio.
+
+Resultado/detalhes com classificação real não foram capturados nesta etapa, para evitar uma chamada desnecessária ao provedor externo de IA. Os testes Playwright de resultado e detalhes usam fixtures isoladas e não são apresentados como evidência de execução real. Capturas do workflow e execuções n8n permanecem fora do escopo das fases 5–7.

@@ -8,7 +8,7 @@ function replaceChart(id, emptyId, type, items, labelMap) {
   const canvas = document.getElementById(id);
   const empty = document.getElementById(emptyId);
   if (charts.has(id)) charts.get(id).destroy();
-  if (!items?.length || !window.Chart) {
+  if (!items?.length || !items.some((item) => item.count > 0) || !window.Chart) {
     canvas.hidden = true;
     empty.hidden = false;
     return;

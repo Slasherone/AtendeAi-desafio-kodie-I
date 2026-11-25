@@ -4,13 +4,13 @@ Este arquivo é o registro de execução do projeto. Atualize os estados, result
 
 ## Estado atual
 
-- **Fase em andamento neste clone:** o contrato estrito JSON Schema foi ativado, a resposta inválida passou a gerar diagnóstico seguro por etapa e o fluxo integrado com `gemini-3.5-flash-lite` foi validado: classificação, persistência e encaminhamento `completed`. Pendem as revisões visuais do frontend/n8n.
+- **Fase em andamento neste clone:** fases 5–7 concluídas com validação Playwright em desktop/mobile, revisão das capturas reais e correções de acessibilidade/responsividade. O fluxo integrado com `gemini-3.5-flash-lite` já foi validado. Permanecem pendentes as capturas reais do n8n e evidências visuais de resultado/detalhes com atendimento real.
 - **Última atualização:** 2026-11-25.
 - **Histórico da máquina anterior:** as fases e validações registradas abaixo descrevem a execução anterior e não substituem as verificações neste clone. A inspeção desta máquina encontrou o projeto versionado na branch `main`, sincronizada com `origin/main`; não havia alterações rastreadas pendentes.
 - **Fase 1:** concluída com este plano e as regras de trabalho em `AGENTS.md`.
 - **Ambiente local atual:** `uv 0.13.10`, CPython `3.11.18`, `.venv311` com dependências instaladas. O `.env` permanece ignorado pelo Git; somente `APP_PORT` foi ajustada localmente para `8001`, preservando o uso da porta `8000` pelo outro projeto.
-- **Validação neste clone:** `18 passed, 1 warning` com Pytest no Python 3.11; `docker compose config --quiet` passou; `docker compose up --build -d` iniciou API e n8n saudáveis. `/health` e `/` da API em `http://localhost:8001`, `/healthz` do n8n em `http://localhost:5678` e a comunicação API-container → n8n retornaram HTTP 200.
-- **n8n atual:** workflow importado e ativo, com credenciais funcionando: a sonda autenticada alcançou o callback e o teste sintético completou o encaminhamento. Volume persistente novo criado pelo Compose. Nenhuma chamada real à IA foi feita nesta configuração.
+- **Validação neste clone:** `25 passed, 1 warning` com Pytest no Python 3.11; `22 passed` em Playwright (desktop Chromium e viewport móvel); `docker compose config --quiet` passou. API e n8n estão saudáveis; `/health` retorna HTTP 200; o banco foi confirmado vazio após a validação visual.
+- **n8n atual:** workflow importado e ativo, com credenciais funcionando: a sonda autenticada alcançou o callback e o teste sintético completou o encaminhamento. Volume persistente mantido. Nenhuma chamada adicional à IA foi feita durante a validação das fases 5–7.
 - **Critério de transparência:** distinguir sempre entre implementado, testado automaticamente, testado manualmente, dependente de configuração/credenciais e pendente de execução externa.
 - **Critério de transparência:** distinguir sempre entre implementado, testado automaticamente, testado manualmente, dependente de configuração/credenciais e pendente de execução externa.
 
@@ -62,11 +62,11 @@ FastAPI persiste atendimento → classifica via serviço de IA → valida/persis
 - [x] **Fase 2 — Estrutura e backend.** Configuração, FastAPI, banco/modelos, schemas, serviços, health e rotas de atendimento implementados. Testes da API passam com banco temporário e dependências mockadas.
 - [x] **Fase 3 — Serviço de IA.** Prompt independente, cliente OpenAI-compatible configurável, validação JSON, confiança/revisão humana e testes mockados implementados. Casos de avaliação manual do prompt incluídos.
 - [x] **Fase 4 — Automação n8n.** URL e credencial Header Auth corrigidas. Sonda de conectividade confirma autenticações e callback; execução positiva com registro sintético confirma resposta 200, encaminhamento `completed` e atendimento persistido como `routed`. O registro foi removido ao final do teste.
-- [ ] **Fase 5 — Design system e estrutura do frontend.** Tokens CSS, temas, layout, sidebar, navegação, componentes e responsividade implementados. **Pendente:** conferência visual manual em desktop e mobile.
-- [ ] **Fase 6 — Funcionalidades do frontend.** Dashboard, criação, resultado, Inbox, detalhes, Analytics e Configurações integrados à API implementados. Servimento dos arquivos estáticos foi verificado por teste; **pendente:** percorrer o fluxo em navegador.
-- [ ] **Fase 7 — Animações e acabamento.** Feedback, loading/erro/vazio, modal/toasts, acessibilidade e `prefers-reduced-motion` implementados. **Pendente:** validação manual de usabilidade e acessibilidade visual.
+- [x] **Fase 5 — Design system e estrutura do frontend.** Revisado em navegador Playwright em desktop e viewport móvel; navegação responsiva, temas e ausência de overflow horizontal validados. Capturas reais das telas sem dados registradas.
+- [x] **Fase 6 — Funcionalidades do frontend.** Navegação, criação/validação/resultado/erro, Inbox, filtros/paginação/detalhes/retentativa, Analytics e Configurações percorridos em Chromium desktop e mobile. A suíte usa respostas isoladas e não grava dados nem chama IA/n8n.
+- [x] **Fase 7 — Animações e acabamento.** Movimento reduzido, foco por teclado, estado acessível do menu móvel e acessibilidade WCAG verificados com axe-core nos principais estados/telas e nos dois temas; sem violações críticas ou sérias.
 - [x] **Fase 8 — Docker e integração completa.** Dockerfile e Compose construídos; API e n8n saudáveis, comunicação interna confirmada e persistência do SQLite/workflow/credenciais verificada após reiniciar os containers neste clone.
-- [ ] **Fase 9 — Testes e documentação.** Suíte, README, arquitetura e diretórios de capturas criados; 18 testes passaram neste clone em Python 3.11. **Pendente:** capturas reais e revisão visual manual.
+- [ ] **Fase 9 — Testes e documentação.** README, arquitetura, Playwright e capturas reais do frontend atualizados; 25 testes Python e 22 cenários de navegador passaram. **Pendente:** capturas reais do n8n e capturas de resultado/detalhes com atendimento real; revisão final da entrega.
 
 ## Estrutura de arquivos planejada
 
@@ -226,3 +226,13 @@ Manter a estrutura simples e sem camadas vazias; ajustá-la se o repositório ev
 - **Automatizado:** Pytest — 25 passaram, 1 aviso de depreciação Starlette/httpx; `compileall` e `docker compose config --quiet` passaram.
 - **Ponta a ponta:** uma chamada real ao `POST /api/v1/attendances` retornou HTTP 201, modelo `gemini-3.5-flash-lite`, classificação `complaint/support/high`, confiança 0.95, atendimento `routed` e encaminhamento n8n `completed`. O detalhe confirmou persistência.
 - **Limpeza/configuração:** registro sintético removido e confirmado ausente; tabelas de atendimentos, classificações e rotas ficaram vazias. `AI_MAX_RETRIES=0` foi temporário apenas para este teste e restaurado para 2; API e n8n terminaram `healthy`.
+
+### Fases 5–7 — validação visual e funcional do frontend — 2026-11-25
+
+- **Ferramentas:** adicionados Playwright e axe-core como dependências de desenvolvimento isoladas em `tests/e2e/`; testes em Chromium desktop (1440×1000) e em viewport móvel (390×844). Nenhum pacote de teste foi adicionado à imagem de produção.
+- **Cobertura de navegador:** navegação e estados vazios; persistência dos temas; validação e envio do formulário com resposta simulada; tratamento de erro; busca/filtros/paginação da Inbox; detalhes/retentativa; Analytics/período; overflow; navegação por toque/teclado; foco visível; movimento reduzido; auditoria axe-core nas cinco áreas e nos temas claro/escuro.
+- **Correções encontradas pelos testes:** contraste abaixo de WCAG em textos e badges; botão icon-only sem nome acessível; menu móvel ainda focável quando fechado; overflow horizontal na Inbox mobile; Analytics mostrava um gráfico vazio quando a série continha apenas zeros. Cores/tokens, nome acessível, `inert`/`aria-expanded`, layout e condição de estado vazio foram corrigidos.
+- **Capturas reais:** `npm.cmd --prefix tests/e2e run capture:ui` criou `new-attendance.png`, `inbox.png`, `analytics.png`, `settings-dark.png`, `settings-light.png`, `mobile-dashboard.png` e `mobile-inbox.png` em `docs/screenshots/frontend/`. O script consulta a API real e recusa capturar se houver atendimentos no banco; a API retornou `total=0`. A captura anterior `dashboard.png` foi preservada.
+- **Resultado:** Playwright — 22 testes passaram (11 por viewport); axe-core — nenhuma violação crítica/séria nas telas e temas avaliados. Revisão visual das capturas confirmou os principais layouts desktop/mobile, incluindo os estados vazios e formulário. Os testes de resultado/detalhes usam fixtures isoladas apenas como artefatos de inspeção e não são publicados como prova de execução real.
+- **Demais verificações:** Pytest — 25 passaram, 1 aviso de depreciação Starlette/httpx; `compileall`, sintaxe dos testes Playwright, `docker compose config --quiet` passaram. `npm install` reportou zero vulnerabilidades. API e n8n permaneceram saudáveis; banco SQLite continuou vazio. A imagem da API foi reconstruída para servir os arquivos atualizados; volumes não foram removidos.
+- **Pendências:** não foi feita chamada adicional ao provedor de IA nem criada classificação real para captura. Resultado/detalhes com dados reais e documentação visual do n8n ficam para a fase 9.

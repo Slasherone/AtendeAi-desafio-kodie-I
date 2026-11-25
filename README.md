@@ -12,7 +12,7 @@ Pequenas equipes recebem dúvidas, reclamações, solicitações e elogios em vo
 - API de modelo de linguagem compatível com OpenAI Chat Completions.
 - n8n com workflow exportado em JSON.
 - HTML5, CSS3, JavaScript ES6+, Chart.js e Lucide Icons.
-- Docker, Docker Compose e Pytest.
+- Docker, Docker Compose, Pytest e Playwright para testes do navegador.
 
 ## Arquitetura e fluxo
 
@@ -142,6 +142,26 @@ python -m pytest -q
 
 Os testes usam SQLite temporário e mocks para IA e n8n; não fazem chamadas pagas a serviços externos. Casos de avaliação manual do prompt estão em `prompts/classification_test_cases.json` e cobrem dúvida, reclamação técnica, comercial, financeiro, elogio, ambiguidade, urgência, sentimento negativo sem prioridade alta, prompt injection e mensagem sem sentido.
 
+### Testes do frontend no navegador
+
+Com Node.js instalado e a API/frontend em execução, instale o navegador Playwright uma vez e rode os testes:
+
+```powershell
+npm.cmd --prefix tests/e2e install
+tests\e2e\node_modules\.bin\playwright.cmd install chromium
+npm.cmd --prefix tests/e2e test
+```
+
+Os testes cobrem Chromium em desktop e viewport móvel, navegação, formulários, erros, Inbox, retentativa, Analytics, temas, movimento reduzido, overflow responsivo e acessibilidade WCAG com axe-core. As respostas da API são fixtures locais: a suíte não chama IA, n8n nem grava atendimentos. Para usar outra URL, defina `ATENDEAI_BASE_URL`.
+
+Para gerar capturas reais das telas vazias usando a API em execução:
+
+```powershell
+npm.cmd --prefix tests/e2e run capture:ui
+```
+
+O script exige banco sem atendimentos e aborta se encontrar registros, para não capturar dados existentes. As imagens são gravadas em `docs/screenshots/frontend/`; capturas já existentes não são sobrescritas. Resultado e detalhes com dados não são publicados como capturas, pois a criação de um atendimento real depende de uma chamada externa à IA.
+
 ## Telas
 
 - Visão geral com métricas persistidas, evolução, distribuição, recentes e configuração dos serviços.
@@ -151,7 +171,7 @@ Os testes usam SQLite temporário e mocks para IA e n8n; não fazem chamadas pag
 - Configurações de tema e informações de integrações.
 - Temas claro/escuro, layout responsivo e respeito a `prefers-reduced-motion`.
 
-Os dados são reais da API; estados vazios são apresentados quando não existem atendimentos. Capturas visuais reais ainda dependem da execução da aplicação e do n8n: consulte `docs/screenshots/README.md`.
+Os dados são reais da API; estados vazios são apresentados quando não existem atendimentos. As capturas disponíveis mostram a aplicação executada com o banco vazio; consulte `docs/screenshots/README.md`.
 
 ## Estrutura principal
 

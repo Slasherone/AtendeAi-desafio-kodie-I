@@ -13,5 +13,7 @@ data/*
 !data/.gitkeep
 n8n_data/
 node_modules/
+tests/e2e/test-results/
+tests/e2e/playwright-report/
 Thumbs.db
 .DS_Store

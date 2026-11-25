@@ -20,14 +20,14 @@ export async function loadInbox(page = currentPage) {
     document.querySelector('#page-prev').disabled = currentPage <= 1;
     document.querySelector('#page-next').disabled = currentPage >= totalPages;
     if (!data.items.length) {
-      body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><strong>Nenhum atendimento encontrado</strong><p>Experimente ajustar os filtros ou registrar uma nova mensagem.</p></div></td></tr>';
+      body.innerHTML = '<tr><td class="empty-cell" colspan="7"><div class="empty-state"><strong>Nenhum atendimento encontrado</strong><p>Experimente ajustar os filtros ou registrar uma nova mensagem.</p></div></td></tr>';
       return;
     }
     body.innerHTML = data.items.map((item) => {
       const classification = item.classification;
       const priority = classification?.priority || '';
       const priorityClass = priority === 'critical' || priority === 'high' ? 'badge-danger' : priority === 'medium' ? 'badge-warning' : 'badge-info';
-      return `<tr><td><div class="table-main"><strong>${escapeHtml(item.customer_name || 'Cliente')}</strong><small>${escapeHtml(classification?.summary || item.id)}</small></div></td><td>${classification ? badge(labels.category[classification.category] || classification.category, 'badge-purple') : '—'}</td><td>${classification ? escapeHtml(labels.department[classification.department] || classification.department) : '—'}</td><td>${classification ? badge(labels.priority[priority] || priority, priorityClass) : '—'}</td><td>${badge(labels.status[item.status] || item.status, statusClass(item.status))}</td><td>${formatDate(item.created_at)}</td><td><button class="table-action" data-attendance-id="${escapeHtml(item.id)}" aria-label="Ver detalhes"><i data-lucide="arrow-up-right"></i></button></td></tr>`;
+      return `<tr><td data-label="Atendimento"><div class="table-main"><strong>${escapeHtml(item.customer_name || 'Cliente')}</strong><small>${escapeHtml(classification?.summary || item.id)}</small></div></td><td data-label="Categoria">${classification ? badge(labels.category[classification.category] || classification.category, 'badge-purple') : '—'}</td><td data-label="Departamento">${classification ? escapeHtml(labels.department[classification.department] || classification.department) : '—'}</td><td data-label="Prioridade">${classification ? badge(labels.priority[priority] || priority, priorityClass) : '—'}</td><td data-label="Status">${badge(labels.status[item.status] || item.status, statusClass(item.status))}</td><td data-label="Data">${formatDate(item.created_at)}</td><td data-label="Ações"><button class="table-action" data-attendance-id="${escapeHtml(item.id)}" aria-label="Ver detalhes"><i data-lucide="arrow-up-right"></i></button></td></tr>`;
     }).join('');
     window.lucide?.createIcons();
   } catch (error) {

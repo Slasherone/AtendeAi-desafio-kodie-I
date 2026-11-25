@@ -171,4 +171,15 @@
   .search-field { flex-basis: 100%; }
   .analytics-grid { grid-template-columns: 1fr; }
   .settings-card { padding: 16px; }
+  .data-table { min-width: 0; display: block; }
+  .data-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+  .data-table tbody { display: grid; gap: 10px; padding: 12px; }
+  .data-table tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .data-table tbody td { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 4px; padding: 7px 5px; border: 0; overflow-wrap: anywhere; }
+  .data-table tbody td[data-label]::before { color: var(--text-muted); content: attr(data-label); font-size: 8px; font-weight: 600; }
+  .data-table tbody td:first-child { padding-left: 5px; }
+  .data-table tbody td:last-child { align-items: flex-end; }
+  .data-table tbody td.empty-cell { grid-column: 1 / -1; align-items: center; padding: 18px 8px !important; }
+  .data-table tbody td.empty-cell::before { content: none; }
+  .data-table .table-main { max-width: 100%; }
 }
