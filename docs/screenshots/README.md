@@ -1,17 +1,31 @@
 # Capturas de execução
 
-As capturas de frontend são feitas pelo Playwright no AtendeAI efetivamente executado, com dados reais da API. O script recusa a captura quando há atendimentos no banco; não use mockups ou telas simuladas como evidência.
+As capturas de frontend são feitas pelo Playwright no AtendeAI efetivamente executado. As telas vazias usam a API real e o script `tests/e2e/capture-ui.js` aborta quando há atendimentos no banco, para evitar capturar dados existentes. Resultado e detalhes foram capturados separadamente durante uma execução real de ponta a ponta com mensagem sintética, sem dados pessoais; não são fixtures nem mockups.
 
 - `workflow/`: visão completa do workflow n8n ativo.
-- `executions/`: execução real bem-sucedida e, se disponível, tratamento de falha.
+- `executions/`: execução real bem-sucedida.
 - `nodes/`: configuração dos nodes, ocultando valores de credenciais.
 - `results/`: payload/resultados da execução, sem dados pessoais ou segredos.
-- `frontend/`: Dashboard, Novo atendimento, Inbox, Analytics, temas e viewport mobile.
+- `frontend/`: telas vazias e resultado/detalhes reais do AtendeAI.
 
-Capturas reais disponíveis:
+## Frontend
 
-- `frontend/dashboard.png`: dashboard com API conectada e banco vazio, capturado anteriormente.
-- `frontend/new-attendance.png`, `inbox.png`, `analytics.png`, `settings-dark.png` e `settings-light.png`: desktop, banco vazio.
-- `frontend/mobile-dashboard.png` e `frontend/mobile-inbox.png`: viewport móvel, banco vazio.
+- `frontend/dashboard.png`: dashboard com API conectada e banco vazio.
+- `frontend/new-attendance.png`, `inbox.png`, `analytics.png`, `settings-dark.png` e `settings-light.png`: telas desktop, com banco vazio.
+- `frontend/mobile-dashboard.png` e `frontend/mobile-inbox.png`: telas em viewport móvel, com banco vazio.
+- `frontend/classification-result.png`: resultado real da classificação `request/support/medium`, encaminhamento concluído e confiança 100%; mensagem sintética e sem dados pessoais.
+- `frontend/attendance-details.png`: detalhes do mesmo atendimento, confirmados no endpoint da API e com encaminhamento concluído.
 
-Resultado/detalhes com classificação real não foram capturados nesta etapa, para evitar uma chamada desnecessária ao provedor externo de IA. Os testes Playwright de resultado e detalhes usam fixtures isoladas e não são apresentados como evidência de execução real. Capturas do workflow e execuções n8n permanecem fora do escopo das fases 5–7.
+## n8n
+
+- `workflow/atendeai-workflow.png`: workflow publicado completo, com os quatro ramos de departamento e os caminhos de validação/erro.
+- `executions/execution-13-success.png`: execução real `13` com o caminho `support` concluído, nodes executados marcados na UI.
+- `nodes/webhook-settings.png`: método/path e URL de produção do webhook; credencial selecionada sem valor secreto.
+- `nodes/validation-settings.png`: código de validação do payload.
+- `nodes/department-router-settings.png`: regras de roteamento dos quatro departamentos.
+- `nodes/fastapi-callback-settings.png`: configuração do callback HTTP ao FastAPI; a credencial aparece apenas pelo nome.
+- `nodes/webhook-response-settings.png`: resposta estruturada ao backend.
+- `results/fastapi-callback-200.png`: saída real do callback, HTTP 200 e encaminhamento `completed`.
+- `results/webhook-response-result.png`: resposta final da mesma execução, incluindo departamento `support` e execução `13`.
+
+As capturas foram feitas na interface n8n efetivamente autenticada. Os dados da execução são sintéticos e não pessoais. Não aparecem tokens, chaves nem valores de credenciais.

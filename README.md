@@ -120,6 +120,8 @@ Não use valores vazios/placeholders em ambiente público. Proteja o n8n e use t
 
 Após ativar e associar as credenciais, valide o webhook sem gravar atendimento com `docker compose exec -T api python -m scripts.check_n8n_webhook`. O teste usa um ID UUID inexistente e considera esperado o 404 do callback após provar que ambas as autenticações chegaram ao FastAPI.
 
+Capturas reais do workflow publicado, de uma execução bem-sucedida, das configurações dos nodes e do callback estão organizadas em [`docs/screenshots/README.md`](docs/screenshots/README.md). Os valores de credenciais não são mostrados.
+
 ## Conectar o OpenCode ao MCP do n8n
 
 O projeto inclui `opencode.json` para conectar o OpenCode ao MCP remoto local do n8n. Para habilitar:
@@ -160,7 +162,7 @@ Para gerar capturas reais das telas vazias usando a API em execução:
 npm.cmd --prefix tests/e2e run capture:ui
 ```
 
-O script exige banco sem atendimentos e aborta se encontrar registros, para não capturar dados existentes. As imagens são gravadas em `docs/screenshots/frontend/`; capturas já existentes não são sobrescritas. Resultado e detalhes com dados não são publicados como capturas, pois a criação de um atendimento real depende de uma chamada externa à IA.
+O script exige banco sem atendimentos e aborta se encontrar registros, para não capturar dados existentes. As imagens são gravadas em `docs/screenshots/frontend/`; capturas já existentes não são sobrescritas. Resultado e detalhes de uma execução real também estão registrados em `classification-result.png` e `attendance-details.png`: foram gerados com uma mensagem sintética, sem dados pessoais, e confirmados contra o registro persistido após o encaminhamento pelo n8n. Essa execução real requer uma chamada ao provedor de IA configurado.
 
 ## Telas
 
@@ -171,7 +173,7 @@ O script exige banco sem atendimentos e aborta se encontrar registros, para não
 - Configurações de tema e informações de integrações.
 - Temas claro/escuro, layout responsivo e respeito a `prefers-reduced-motion`.
 
-Os dados são reais da API; estados vazios são apresentados quando não existem atendimentos. As capturas disponíveis mostram a aplicação executada com o banco vazio; consulte `docs/screenshots/README.md`.
+Os dados são reais da API; estados vazios são apresentados quando não existem atendimentos. As capturas de resultado e detalhes mostram uma classificação sintética real, sem dados pessoais, encaminhada pelo n8n. Consulte [`docs/screenshots/README.md`](docs/screenshots/README.md) para a descrição e o estado das evidências visuais.
 
 ## Estrutura principal
 
@@ -192,7 +194,7 @@ AGENTS.md             regras permanentes de trabalho
 - Não há autenticação de usuários finais nesta versão demonstrativa.
 - O destino é demonstrado pelo registro do departamento no backend; não há sistema externo real de atendimento.
 - O provedor precisa suportar Chat Completions e `response_format: json_object`; ainda assim, a resposta é validada localmente.
-- A conectividade real com IA/n8n, importação e ativação do workflow e capturas de tela dependem de credenciais e execução manual no ambiente.
+- A conectividade futura com IA/n8n depende das credenciais e da disponibilidade dos serviços externos; as capturas atuais documentam uma execução sintética real, sem dados pessoais.
 - Próximas evoluções possíveis: fila assíncrona, histórico de múltiplas retentativas, autenticação de usuários, migrações Alembic e integrações autorizadas com ferramentas de suporte.
 
 ## Publicação

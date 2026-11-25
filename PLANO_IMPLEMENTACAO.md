@@ -4,7 +4,7 @@ Este arquivo é o registro de execução do projeto. Atualize os estados, result
 
 ## Estado atual
 
-- **Fase em andamento neste clone:** fases 5–7 concluídas com validação Playwright em desktop/mobile, revisão das capturas reais e correções de acessibilidade/responsividade. O fluxo integrado com `gemini-3.5-flash-lite` já foi validado. Permanecem pendentes as capturas reais do n8n e evidências visuais de resultado/detalhes com atendimento real.
+- **Fase em andamento neste clone:** fases 5–7 concluídas com validação Playwright em desktop/mobile, revisão das capturas reais e correções de acessibilidade/responsividade. O fluxo integrado com `gemini-3.5-flash-lite` já foi validado. As capturas reais do frontend e do n8n foram concluídas; resta a revisão final da entrega.
 - **Última atualização:** 2026-11-25.
 - **Histórico da máquina anterior:** as fases e validações registradas abaixo descrevem a execução anterior e não substituem as verificações neste clone. A inspeção desta máquina encontrou o projeto versionado na branch `main`, sincronizada com `origin/main`; não havia alterações rastreadas pendentes.
 - **Fase 1:** concluída com este plano e as regras de trabalho em `AGENTS.md`.
@@ -66,7 +66,7 @@ FastAPI persiste atendimento → classifica via serviço de IA → valida/persis
 - [x] **Fase 6 — Funcionalidades do frontend.** Navegação, criação/validação/resultado/erro, Inbox, filtros/paginação/detalhes/retentativa, Analytics e Configurações percorridos em Chromium desktop e mobile. A suíte usa respostas isoladas e não grava dados nem chama IA/n8n.
 - [x] **Fase 7 — Animações e acabamento.** Movimento reduzido, foco por teclado, estado acessível do menu móvel e acessibilidade WCAG verificados com axe-core nos principais estados/telas e nos dois temas; sem violações críticas ou sérias.
 - [x] **Fase 8 — Docker e integração completa.** Dockerfile e Compose construídos; API e n8n saudáveis, comunicação interna confirmada e persistência do SQLite/workflow/credenciais verificada após reiniciar os containers neste clone.
-- [ ] **Fase 9 — Testes e documentação.** README, arquitetura, Playwright e capturas reais do frontend atualizados; 25 testes Python e 22 cenários de navegador passaram. **Pendente:** capturas reais do n8n e capturas de resultado/detalhes com atendimento real; revisão final da entrega.
+- [ ] **Fase 9 — Testes e documentação.** README, arquitetura, Playwright e capturas reais do frontend/n8n atualizados; 25 testes Python e 22 cenários de navegador passaram. **Pendente:** revisão final da entrega.
 
 ## Estrutura de arquivos planejada
 
@@ -236,3 +236,20 @@ Manter a estrutura simples e sem camadas vazias; ajustá-la se o repositório ev
 - **Resultado:** Playwright — 22 testes passaram (11 por viewport); axe-core — nenhuma violação crítica/séria nas telas e temas avaliados. Revisão visual das capturas confirmou os principais layouts desktop/mobile, incluindo os estados vazios e formulário. Os testes de resultado/detalhes usam fixtures isoladas apenas como artefatos de inspeção e não são publicados como prova de execução real.
 - **Demais verificações:** Pytest — 25 passaram, 1 aviso de depreciação Starlette/httpx; `compileall`, sintaxe dos testes Playwright, `docker compose config --quiet` passaram. `npm install` reportou zero vulnerabilidades. API e n8n permaneceram saudáveis; banco SQLite continuou vazio. A imagem da API foi reconstruída para servir os arquivos atualizados; volumes não foram removidos.
 - **Pendências:** não foi feita chamada adicional ao provedor de IA nem criada classificação real para captura. Resultado/detalhes com dados reais e documentação visual do n8n ficam para a fase 9.
+
+### Capturas reais de resultado e detalhes — 2026-11-25
+
+- **Pré-verificação:** Git estava limpo; API e n8n estavam `healthy`, `/health` e `/healthz` responderam HTTP 200, a sonda autenticada confirmou webhook/callback ativos e o banco começou vazio.
+- **Execução demonstrativa:** Playwright enviou pela interface uma mensagem sintética, sem dados pessoais. O `POST /api/v1/attendances` retornou HTTP 201; classificação `request/support/medium`, confiança 1.0, sem revisão humana; encaminhamento n8n `completed`, atendimento `routed` e execução n8n `13`. O endpoint de detalhes confirmou a mesma execução persistida.
+- **Capturas revisadas:** `docs/screenshots/frontend/classification-result.png` mostra o resultado real; `docs/screenshots/frontend/attendance-details.png` mostra os detalhes retornados pela API. Ambas foram visualmente inspecionadas e não contêm credenciais ou dados pessoais.
+- **Limpeza:** uma primeira submissão sintética foi removida exatamente após a revisão detectar problema de codificação no texto da captura. Após validar as capturas finais, o segundo registro também foi removido pelo ID exato; os totais de `attendances`, `classifications` e `routings` voltaram a zero. A execução n8n `13` permanece no histórico do n8n para as capturas visuais.
+- **Pendência:** o n8n exige login na interface. Foi aberta uma janela local temporária do Playwright para autenticação manual; nenhuma senha foi solicitada ou registrada. Após login, capturar workflow, execução e configurações seguras dos nodes, remover o registro sintético e confirmar o banco vazio.
+
+### Capturas reais do n8n — 2026-11-25
+
+- **Login/diagnóstico:** a autenticação fornecida foi aceita em um contexto Chromium limpo. O workflow carregou como publicado e as chamadas normais da interface retornaram HTTP 200, sem erros JavaScript. Os relógios do host e do container estavam sincronizados; o token observado tinha expiração futura. Uma chamada manual isolada ao REST sem o header `browser-id` retornou 401 e não representava o fluxo normal do editor. Nenhuma senha ou token foi registrada no repositório.
+- **Execução documentada:** workflow `AtendeAI — Roteamento de atendimentos`, ativo/publicado; execução real `13`, sucesso em 154 ms, ramo `support`, callback ao FastAPI HTTP 200 e retorno `completed`. A captura foi feita na UI real do n8n.
+- **Capturas:** `docs/screenshots/workflow/atendeai-workflow.png`; `docs/screenshots/executions/execution-13-success.png`; configurações em `docs/screenshots/nodes/`; dados do callback e resposta em `docs/screenshots/results/`.
+- **Segurança/revisão:** imagens revisadas; nenhuma chave ou valor de credencial aparece. Os detalhes do callback contêm somente campos sintéticos de roteamento e cabeçalhos de resposta não sensíveis. A sessão autenticada temporária foi armazenada fora do repositório e removida após as capturas.
+- **Limpeza final:** o atendimento sintético exato já havia sido removido; `attendances`, `classifications` e `routings` permaneceram vazias. A API e o n8n permaneceram saudáveis.
+- **Pendência geral:** revisão final da entrega da Fase 9.
