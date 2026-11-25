@@ -1,5 +1,7 @@
-# PROMPT — Desenvolvimento completo do AtendeAI
+# Brief de requisitos do desafio — AtendeAI
 ## Desafio Técnico KODIE — IA, API, Automação e Frontend
+
+> Brief histórico elaborado a partir do escopo do desafio e usado como base para o desenvolvimento. Preserva requisitos e instruções do contexto original, mas não é um relatório do estado atual. Para a operação atual dos agentes, `AGENTS.md` e `PLANO_IMPLEMENTACAO.md` são as referências; para comportamento e utilização implementados, consulte `README.md` e os documentos em `docs/`.
 
 ---
 

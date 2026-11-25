@@ -4,7 +4,9 @@ Este arquivo é o registro de execução do projeto. Atualize os estados, result
 
 ## Estado atual
 
-- **Fase em andamento neste clone:** fases 1–9 concluídas para o escopo local/demonstrativo. A revisão técnica passou em 25 testes Python, 22 testes Playwright (desktop/mobile, incluindo axe-core), `compileall`, `docker compose config --quiet`, healthchecks da API/n8n e sonda autenticada do webhook n8n. O banco permaneceu vazio.
+- **Fase em andamento neste clone:** fases 1–9 do produto concluídas para o escopo local/demonstrativo; a reestruturação documental (Fase 10), incluindo as capturas reais de configurações n8n, foi concluída. A revisão técnica registrada passou em 25 testes Python, 22 testes Playwright (desktop/mobile, incluindo axe-core), `compileall`, `docker compose config --quiet`, healthchecks da API/n8n e sonda autenticada do webhook n8n. Nesta Fase 10, os links locais das seis páginas Markdown, a configuração Compose em modo silencioso e o JSON do workflow foram validados. O banco permaneceu vazio no registro técnico anterior.
+- **Pendências documentais:** nenhuma captura pendente. O inventário e as descrições estão em `docs/screenshots/README.md`.
+- **Leitura do histórico:** os registros cronológicos abaixo preservam estados observados em datas anteriores; quando divergirem deste resumo, considerar este estado atual e a entrada mais recente.
 - **Última atualização:** 2026-11-25.
 - **Histórico da máquina anterior:** as fases e validações registradas abaixo descrevem a execução anterior e não substituem as verificações neste clone. A branch `main` está sincronizada com `origin/main`. A revisão começou com uma alteração local não commitada em `PLANO_IMPLEMENTACAO.md`; seu conteúdo foi preservado durante os ajustes.
 - **Fase 1:** concluída com este plano e as regras de trabalho em `AGENTS.md`.
@@ -133,14 +135,14 @@ Manter a estrutura simples e sem camadas vazias; ajustá-la se o repositório ev
 - **Validação positiva:** foi criado um atendimento sintético com UUID aleatório e classificação `support`; o workflow publicado chamou o callback, recebeu 200, e o banco refletiu `Routing.status=completed` e `Attendance.status=routed`. O script de teste removeu o atendimento, classificação e routing sintéticos, e confirmou que o ID não restou no banco. Nenhum atendimento anterior foi alterado.
 - **Próximas etapas:** validar persistência do SQLite e do workflow/credenciais após reinício dos containers (Fase 8); fazer conferência visual do frontend em desktop/mobile e guardar capturas reais (Fases 5–7/9). O usuário optou por manter o token atual para o exercício local; nenhum valor secreto foi salvo neste plano.
 
-### Fases 5–7 — Frontend (implementado; conferência no navegador pendente)
+### Fases 5–7 — Frontend (registro histórico de 2026-11-24; status superado)
 
 - **Resultado:** SPA em HTML/CSS/JavaScript puro, Dashboard, Novo atendimento, Inbox, detalhes, Analytics, Configurações, dark/light, estados vazios e responsividade declarada em CSS.
 - **Arquivos principais:** `frontend/index.html`, `frontend/assets/css/`, `frontend/assets/js/`.
 - **Testes:** `GET /`, `/health`, `/assets/css/main.css` e `/assets/js/app.js` responderam HTTP 200 no Compose ativo; sintaxe dos módulos JavaScript também foi verificada com Node. Isso valida entrega dos arquivos, não sua renderização visual. Não foi feita validação visual/manual em navegador.
 - **Pendências:** percorrer fluxos, temas e breakpoints em desktop/mobile e registrar capturas reais.
 
-### Fases 8–9 — Docker, testes e documentação (parcialmente validadas)
+### Fases 8–9 — Docker, testes e documentação (registro histórico de 2026-11-24; status superado)
 
 - **Resultado:** Dockerfile Python 3.11, Compose API+n8n, persistência, healthchecks, `.env.example`, `.gitignore`, README, arquitetura e instruções de capturas criados. A imagem n8n foi fixada na versão estável `2.48.7` após a tag genérica `:2` não existir.
 - **Testes executados:** `.venv311\Scripts\python.exe -m pytest -q` — **14 passed, 1 warning**; `python -m compileall -q app tests scripts` passou; `node --input-type=module --check` passou para os sete módulos JavaScript; `docker compose config --quiet` passou; `docker build` passou; `docker compose up --build -d` iniciou API e n8n saudáveis. `/health` API e `/healthz` n8n responderam HTTP 200; API container acessou `http://n8n:5678/healthz` com HTTP 200. UI do n8n e frontend responderam HTTP 200.
@@ -260,3 +262,13 @@ Manter a estrutura simples e sem camadas vazias; ajustá-la se o repositório ev
 - **Escopo externo:** nenhuma chamada real ao provedor de IA ou ao webhook n8n foi realizada nesta revisão; a validação ponta a ponta existente permanece documentada acima.
 - **Conectividade:** `docker compose exec -T api python -m scripts.check_n8n_webhook` confirmou webhook ativo, autenticação do webhook, autenticação interna e callback alcançável. A sonda usa UUID inexistente e não cria registros. Os healthchecks da API e do n8n retornaram HTTP 200.
 - **Próxima etapa:** nenhuma ação necessária para o escopo local/demonstrativo. Não fazer commit ou push sem autorização explícita.
+
+### Fase 10 — Auditoria e reestruturação da documentação — 2026-11-25
+
+- **Resultado:** README reorganizado como apresentação pública, com capturas reais incorporadas, Mermaid, execução resumida, limitações e links para documentação especializada. Criados guias de API, workflow n8n e desenvolvimento; arquitetura e índice de screenshots revisados. `instrucoes_desafio.md` agora identifica explicitamente seu papel como referência de requisitos, sem substituir a descrição do estado implementado. Capturadas na interface real do n8n as configurações internas dos 8 nodes que faltavam, usando Playwright não headless e pausas de carregamento.
+- **Arquivos modificados:** `README.md`, `AGENTS.md`, `docs/architecture.md`, `docs/screenshots/README.md`, `instrucoes_desafio.md`, `PLANO_IMPLEMENTACAO.md`.
+- **Arquivos criados:** `docs/API.md`, `docs/WORKFLOW_N8N.md`, `docs/DEVELOPMENT.md` e oito capturas em `docs/screenshots/nodes/`: `payload-validity-settings.png`, `destination-support-settings.png`, `destination-financial-settings.png`, `destination-commercial-settings.png`, `destination-customer-service-settings.png`, `invalid-payload-settings.png`, `unknown-department-settings.png` e `callback-error-settings.png`.
+- **Validações executadas:** verificação de alvos Markdown/imagens locais em seis documentos; `docker compose config --quiet`; parse do workflow com `python -m json.tool`; busca de padrões comuns de tokens nos arquivos de texto versionados e verificação de nomes sensíveis versionados. As oito capturas novas foram inspecionadas visualmente e não exibem tokens, chaves nem valores de credenciais. Não foram encontrados alvos quebrados, tokens nesses padrões ou arquivos `.env`/banco/chaves privadas versionados. O histórico completo do Git não foi escaneado.
+- **Observações técnicas fora do escopo, não corrigidas:** `APP_ENV`, `APP_HOST` e `FRONTEND_URL` estão declaradas na configuração, mas não alteram comportamento nesta versão; `AI_PROVIDER` não seleciona implementações específicas de fornecedores. O README e o guia de desenvolvimento delimitam esses pontos sem alterar o código.
+- **Testes:** não reexecutei Pytest nem a suíte automatizada de Playwright. O Playwright foi usado para capturar as configurações reais do n8n; nenhuma configuração do workflow foi alterada.
+- **Pendências:** nenhuma captura visual pendente nesta fase. Nenhum arquivo foi removido e nenhum código, configuração ou workflow foi alterado.

@@ -1,6 +1,6 @@
 # Regras de trabalho do AtendeAI
 
-- Leia `instrucoes_desafio.md` como especificação funcional principal e consulte `PLANO_IMPLEMENTACAO.md` para a fase e o estado atual.
+- Use `instrucoes_desafio.md` como referência dos requisitos iniciais do desafio, não como comprovação do que está implementado; confira o código e a documentação atual. Consulte `PLANO_IMPLEMENTACAO.md` para a fase e o estado do trabalho.
 - Atue como engenheiro de software: inspecione o estado atual antes de alterar arquivos, entenda o impacto, preserve trabalho existente e implemente incrementalmente.
 - Siga a arquitetura e os critérios do desafio; mantenha o backend como fonte da verdade e contratos claros entre frontend, API, IA e n8n.
 - Não invente integrações ou dados reais. Não exponha segredos; use variáveis de ambiente e mantenha `.env` fora do Git.

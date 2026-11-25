@@ -1,202 +1,236 @@
 # AtendeAI
 
-**Atendimento mais inteligente, do primeiro contato ao encaminhamento.** AtendeAI recebe mensagens de clientes, classifica categoria, departamento, prioridade e sentimento com uma API de IA configurável, persiste os resultados e demonstra o encaminhamento via n8n.
+**Triagem inteligente de atendimentos, com classificação estruturada e encaminhamento demonstrável.** O AtendeAI combina uma interface web, uma API FastAPI, um provedor de IA compatível com OpenAI Chat Completions, SQLite e uma automação n8n.
 
-## Problema e solução
+[![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
 
-Pequenas equipes recebem dúvidas, reclamações, solicitações e elogios em volume crescente. A triagem manual consome tempo e pode atrasar o direcionamento. O AtendeAI organiza essa etapa: FastAPI valida e orquestra a classificação, SQLite mantém o histórico, n8n registra o departamento de destino e uma interface web acompanha indicadores e atendimentos.
+O projeto foi desenvolvido como solução demonstrativa para o desafio técnico KODIE de integração entre inteligência artificial, API e automação. A classificação é feita no backend; o n8n registra o departamento de destino no próprio AtendeAI. Não há integração com uma plataforma externa de atendimento.
 
-## Tecnologias
+## Navegação
 
-- Python 3.11+, FastAPI, Pydantic 2, SQLAlchemy 2, SQLite e HTTPX.
-- API de modelo de linguagem compatível com OpenAI Chat Completions.
-- n8n com workflow exportado em JSON.
-- HTML5, CSS3, JavaScript ES6+, Chart.js e Lucide Icons.
-- Docker, Docker Compose, Pytest e Playwright para testes do navegador.
+- [Problema e proposta](#problema-e-proposta)
+- [Funcionalidades](#funcionalidades)
+- [Demonstração visual](#demonstração-visual)
+- [Arquitetura e fluxo](#arquitetura-e-fluxo)
+- [Tecnologias](#tecnologias)
+- [Como executar](#como-executar)
+- [Workflow n8n](#workflow-n8n)
+- [Configuração e segurança](#configuração-e-segurança)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Testes e limitações](#testes-e-limitações)
+- [Documentação](#documentação)
+
+## Problema e proposta
+
+Pequenas equipes podem receber mensagens de clientes com dúvidas, reclamações, solicitações e elogios. A triagem manual exige leitura, identificação de prioridade e encaminhamento ao setor adequado; esse trabalho pode consumir tempo e atrasar o atendimento.
+
+O AtendeAI demonstra como organizar essa etapa: a pessoa registra uma mensagem, a API solicita uma classificação estruturada à IA, valida e persiste o resultado e, quando não é necessária revisão humana, aciona o n8n para registrar o departamento de destino. A interface permite acompanhar indicadores e consultar atendimentos.
+
+A classificação inclui categoria, departamento, prioridade, sentimento, resumo, confiança estimada, justificativa e indicação de revisão humana. A confiança é uma estimativa do modelo, não uma garantia estatística. Casos marcados para revisão — ou abaixo do limite configurado — não são encaminhados automaticamente.
+
+## Funcionalidades
+
+- Criar atendimentos com mensagem e dados de cliente opcionais.
+- Classificar mensagens em categorias, departamentos, prioridades e sentimentos definidos.
+- Consultar resumo, justificativa, confiança estimada e necessidade de revisão humana.
+- Persistir atendimentos, classificações e estado de encaminhamento em SQLite.
+- Buscar, filtrar, paginar e consultar detalhes na Inbox.
+- Visualizar indicadores, distribuições e volume ao longo do tempo.
+- Demonstrar o roteamento para quatro departamentos pelo workflow n8n.
+- Retentar encaminhamentos elegíveis sem apagar a classificação já concluída.
+- Usar a interface em temas claro e escuro, com layout responsivo.
+
+## Demonstração visual
+
+As imagens abaixo são capturas reais do AtendeAI. As telas de estado vazio usam a API em execução; resultado e detalhes foram registrados com mensagem sintética, sem dados pessoais.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/frontend/dashboard.png" alt="Dashboard do AtendeAI com indicadores zerados e gráficos no estado vazio" width="100%"><p><strong>Visão geral.</strong> Indicadores e gráficos baseados nos dados persistidos.</p></td>
+    <td width="50%"><img src="docs/screenshots/frontend/new-attendance.png" alt="Formulário para criar atendimento e enviar uma mensagem para classificação" width="100%"><p><strong>Novo atendimento.</strong> Entrada de mensagem e dados opcionais do cliente.</p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/frontend/classification-result.png" alt="Resultado real de classificação sintética, com categoria, departamento, prioridade, sentimento e encaminhamento concluído" width="100%"><p><strong>Resultado da IA.</strong> Classificação sintética real, encaminhada pelo n8n.</p></td>
+    <td width="50%"><img src="docs/screenshots/frontend/inbox.png" alt="Inbox do AtendeAI no estado vazio, com busca e filtros" width="100%"><p><strong>Inbox.</strong> Busca, filtros e paginação dos atendimentos.</p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/frontend/attendance-details.png" alt="Detalhes de atendimento demonstrativo, incluindo mensagem original, classificação e encaminhamento" width="100%"><p><strong>Detalhes.</strong> Informações do atendimento confirmadas pela API.</p></td>
+    <td width="50%"><img src="docs/screenshots/frontend/analytics.png" alt="Tela de Analytics do AtendeAI com distribuições e série temporal" width="100%"><p><strong>Analytics.</strong> Distribuições e evolução dos registros.</p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/frontend/settings-dark.png" alt="Tela de configurações do AtendeAI no tema escuro" width="100%"><p><strong>Tema escuro.</strong> Preferências e estado configurado dos serviços.</p></td>
+    <td width="50%"><img src="docs/screenshots/frontend/settings-light.png" alt="Tela de configurações do AtendeAI no tema claro" width="100%"><p><strong>Tema claro.</strong> Alternância de aparência da interface.</p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/frontend/mobile-dashboard.png" alt="Dashboard do AtendeAI em viewport móvel" width="100%"><p><strong>Dashboard móvel.</strong> Layout adaptado a telas pequenas.</p></td>
+    <td width="50%"><img src="docs/screenshots/frontend/mobile-inbox.png" alt="Inbox do AtendeAI em viewport móvel" width="100%"><p><strong>Inbox móvel.</strong> Navegação e consulta responsivas.</p></td>
+  </tr>
+</table>
 
 ## Arquitetura e fluxo
 
-```text
-Navegador → Frontend → FastAPI → serviço de IA → validação Pydantic
-                               ├→ SQLite
-                               └→ webhook n8n → callback autenticado FastAPI → SQLite
+```mermaid
+flowchart TD
+    U[Pessoa usuária] --> FE[Frontend HTML CSS JavaScript]
+    FE -->|HTTP mesma origem| API[API FastAPI]
+    API -->|Carrega| P[Prompt de classificação]
+    API -->|Chat Completions com JSON Schema estrito| AI[Provedor de IA compatível com OpenAI]
+    AI -->|Resposta JSON| API
+    API -->|Persiste atendimento e classificação| DB[(SQLite)]
+    API -->|Se revisão humana não for necessária| N8N[Webhook n8n]
+    N8N --> V[Validação e escolha do departamento]
+    V -->|Callback com token interno| API
+    API -->|Atualiza encaminhamento| DB
+    N8N -->|Resposta síncrona| API
+    API -->|Resultado consolidado| FE
+    FE --> U
 ```
 
-O navegador consome apenas a API pública; chaves e tokens ficam no backend/n8n. A classificação validada é persistida antes da automação. Casos que precisam de revisão humana não são encaminhados automaticamente. Se o n8n falhar, a classificação permanece disponível e o encaminhamento pode ser retentado. O workflow demonstra o registro do departamento no backend, sem inventar integrações com sistemas de terceiros.
+1. A interface envia a mensagem à API; o navegador não chama diretamente IA, banco ou n8n.
+2. A API valida e persiste o atendimento e envia a mensagem, tratada como dado não confiável, ao serviço de IA junto ao prompt.
+3. A resposta estruturada é validada por JSON Schema estrito e por Pydantic. O backend aplica o limite de confiança e a regra de revisão humana.
+4. Se houver revisão, o encaminhamento automático fica bloqueado. Caso contrário, a API chama o webhook n8n server-to-server.
+5. O n8n valida o payload, escolhe um de quatro departamentos e chama o callback autenticado da API para registrar o resultado.
+6. A API atualiza o estado persistido e devolve o resultado ao frontend.
 
-Consulte [`docs/architecture.md`](docs/architecture.md) para estados e contratos detalhados.
+Se o n8n não estiver configurado ou falhar, a classificação permanece armazenada e o estado do encaminhamento pode ser consultado. O n8n demonstra o registro do destino no AtendeAI; não cria chamados em um serviço externo.
 
-## Contrato de classificação
+## Tecnologias
 
-```json
-{
-  "category": "complaint",
-  "department": "support",
-  "priority": "high",
-  "sentiment": "negative",
-  "summary": "Cliente relata falha ao acessar a conta.",
-  "confidence": 0.94,
-  "requires_human_review": false,
-  "reason": "A mensagem descreve um problema técnico que exige suporte."
-}
-```
+| Categoria | Tecnologias | Uso no projeto |
+|---|---|---|
+| Frontend | HTML, CSS, JavaScript ES6+ | Interface estática servida pela própria API. |
+| Recursos visuais | Chart.js, Lucide, Google Fonts (DM Sans e Manrope) | Gráficos, ícones e fontes carregados no frontend por CDN. |
+| Backend | Python 3.11+, FastAPI, Pydantic, SQLAlchemy, HTTPX | API, validação, persistência e chamadas HTTP assíncronas. |
+| Inteligência artificial | API compatível com OpenAI Chat Completions | Classificação estruturada com `response_format: json_schema`. O exemplo de ambiente usa Gemini via endpoint compatível. |
+| Automação | n8n | Validação do payload, roteamento por departamento e callback à API. |
+| Armazenamento | SQLite | Atendimentos, classificações e encaminhamentos locais. |
+| Infraestrutura | Docker, Docker Compose | Execução da API e do n8n com persistência local. |
+| Testes | Pytest, Playwright, axe-core | Testes de backend e de navegador, incluindo verificações de acessibilidade. |
 
-Enums e campos são validados no backend. Confiança inferior a `AI_CONFIDENCE_THRESHOLD` (padrão `0.70`) força revisão humana. Confiança é uma estimativa do modelo, não garantia estatística.
+O cliente de IA usa o protocolo compatível com OpenAI e exige suporte do provedor a JSON Schema estrito. `AI_PROVIDER` não corresponde a uma coleção de adaptadores independentes por fornecedor.
 
-## Executar localmente
+## Decisões de projeto
 
-Requer Python 3.11 ou superior. Para manter uma versão isolada do Python só para este projeto, instale o gerenciador `uv` (https://docs.astral.sh/uv/) e rode na pasta do projeto:
+- **Backend como fonte da verdade:** valida entradas e saídas, aplica regras de revisão, persiste os dados e expõe uma API única para o frontend.
+- **Resposta de IA estruturada:** JSON Schema estrito reduz variações no formato; Pydantic faz a validação local antes de persistir.
+- **IA e automação separadas:** a classificação acontece no backend; o n8n decide o ramo e registra o encaminhamento sem incorporar regras centrais de classificação.
+- **Falha do encaminhamento não apaga a classificação:** os estados de classificação e de roteamento são mantidos separadamente para permitir consulta e retentativa elegível.
+- **Stack leve para demonstração:** frontend sem framework pesado, SQLite e Compose simplificam a execução local do conjunto.
+
+## Como executar
+
+### Docker Compose — caminho recomendado
+
+Pré-requisitos: Docker Desktop ou Docker Engine com Docker Compose.
+
+No PowerShell, na raiz do projeto:
 
 ```powershell
-uv python install 3.11
-uv venv --python 3.11 .venv311
-.\.venv311\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Edite `.env` e informe ao menos `AI_API_KEY` e `AI_MODEL` para classificação real. `AI_BASE_URL` pode apontar para qualquer provedor compatível. Para rodar somente a API/frontend sem IA, os serviços sobem, mas criação de atendimento retorna erro de configuração até que a IA seja configurada.
-
-O `.env.example` usa Gemini via Google AI Studio: `AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/` e `AI_MODEL=gemini-3.5-flash-lite`, um modelo gratuito otimizado para tarefas leves e de alto volume, como extração/classificação. A disponibilidade e os limites gratuitos variam por projeto/modelo; confira os limites ativos no AI Studio. No nível gratuito, o Google pode usar o conteúdo para melhorar produtos — use mensagens sintéticas e não envie dados pessoais ou confidenciais. `AI_TIMEOUT` (padrão 90 s) limita o tempo total da classificação, incluindo tentativas; o frontend aguarda até 180 s para cobrir classificação e encaminhamento.
-
-Falhas temporárias HTTP `429`, `500`, `502`, `503` e `504` são repetidas até `AI_MAX_RETRIES` vezes (padrão 2, máximo 3 retries), com espera exponencial curta e respeito limitado ao `Retry-After` numérico. Use `AI_MAX_RETRIES=0` para desativar tentativas. Erros de autenticação/configuração e timeouts não são repetidos; se a indisponibilidade persistir, a API retorna uma mensagem orientando tentar novamente.
-
-A classificação solicita JSON Schema estrito com enums e valida novamente o resultado com Pydantic. Se a saída for inválida, os logs registram somente a etapa e os nomes/tipos dos campos com erro — nunca a mensagem do cliente nem o conteúdo bruto do provedor.
-
-Para testar a IA diretamente, o script envia uma mensagem ao provedor, valida a resposta com o mesmo schema usado pela aplicação e imprime o resultado em JSON, o modelo e a duração. A chave e a entrada completa não são impressas; como o resumo gerado pode refletir o conteúdo, prefira mensagens sintéticas ou autorizadas. Por padrão, usa uma mensagem sintética e **não faz retries** para evitar chamadas externas inesperadas:
-
-```powershell
-python -m scripts.check_ai_connection
-```
-
-Passe uma mensagem própria e, opcionalmente, altere o timeout ou autorize retries transitórios:
-
-```powershell
-python -m scripts.check_ai_connection --message "Não consigo acessar minha conta."
-python -m scripts.check_ai_connection --message "Mensagem sintética" --timeout 45 --max-retries 2
-```
-
-`--max-retries 0` (padrão) faz uma única tentativa; valores de 1 a 3 são retries adicionais. `--timeout` aceita de 1 a 180 segundos e não altera o `.env`. No Docker, execute o script dentro do container para usar a configuração dele:
-
-```powershell
-docker compose exec -T api python -m scripts.check_ai_connection --message "Mensagem sintética"
-```
-
-```powershell
-uvicorn app.main:app --reload
-```
-
-Acesse `http://localhost:8000`; documentação OpenAPI em `/docs`; health em `/health`.
-
-## Executar com Docker Compose
-
-Requer Docker Desktop ou Docker Engine com Compose. Copie `.env.example` para `.env`, defina credenciais e execute:
+Edite `.env` e configure `AI_API_KEY`, `N8N_API_TOKEN` e `INTERNAL_API_TOKEN`. Use tokens longos e diferentes. Se trocar de provedor, ajuste `AI_BASE_URL` e `AI_MODEL`. Em seguida:
 
 ```powershell
 docker compose up --build
 ```
 
+Acesse:
+
 - AtendeAI: `http://localhost:8000`
 - n8n: `http://localhost:5678`
-- SQLite persistido em `./data`; dados n8n persistidos no volume `n8n_data`.
-- A rede interna usa `http://api:8000`; não use `localhost` entre containers.
+- Swagger/OpenAPI da API: `http://localhost:8000/docs`
 
-Não use valores vazios/placeholders em ambiente público. Proteja o n8n e use tokens longos e únicos.
+A stack contém a API (que também serve o frontend) e o n8n. O banco SQLite é persistido em `./data`; os dados do n8n ficam no volume `n8n_data`. O workflow precisa ser importado, receber as credenciais e ser publicado no n8n. Veja [Workflow n8n](#workflow-n8n) e o [guia completo](docs/WORKFLOW_N8N.md).
 
-## Configurar o workflow n8n
+### Execução local da API
 
-1. Faça login na interface n8n e importe `workflows/atendeai-workflow.json`.
-2. Crie e vincule a credencial Header Auth `AtendeAI Webhook Header Auth`: campo **Name** = `X-AtendeAI-Token`; campo **Value** = valor de `N8N_API_TOKEN` do `.env`.
-3. No node `Registrar encaminhamento no FastAPI`, selecione a credencial Header Auth interna. Nela, campo **Name** = `Authorization` (somente o nome, sem `:`); campo **Value** = `Bearer <INTERNAL_API_TOKEN>`. **Name é o nome do header HTTP, não o rótulo da credencial.** Não coloque `AtendeAI Internal API Auth` nem `Authorization: Bearer ...` no campo **Name**. O título da credencial aparece separadamente no topo da janela e pode variar; confirme qual credencial está selecionada no node.
-4. No node `Registrar encaminhamento no FastAPI`, clique em **fx** para mudar o campo URL para o modo **Expression** e cole a expressão abaixo, sem `=` no início:
-
-   ```text
-   {{ 'http://api:8000/api/v1/internal/attendances/' + $json.attendance_id + '/route' }}
-   ```
-
-   O JSON exportado deve armazenar esse campo com exatamente um `=` inicial: `={{ 'http://api:8000/api/v1/internal/attendances/' + $json.attendance_id + '/route' }}`. Se aparecer `=={{`, remova o `=` excedente: a URL resolvida ficará com um `=` literal e o HTTP Request falhará com `Invalid URL`. Para outro ambiente, troque `http://api:8000` pelo endereço que o container n8n alcance.
-5. No n8n 2, clique em **Publish** para colocar a versão editada em produção (salvar alterações mantém o rascunho separado). O caminho de produção é `/webhook/atendeai/route`; a URL de teste do n8n é diferente.
-6. Defina o mesmo token interno no backend e na credencial n8n. O arquivo exportado não contém tokens reais.
-
-Após ativar e associar as credenciais, valide o webhook sem gravar atendimento com `docker compose exec -T api python -m scripts.check_n8n_webhook`. O teste usa um ID UUID inexistente e considera esperado o 404 do callback após provar que ambas as autenticações chegaram ao FastAPI.
-
-Capturas reais do workflow publicado, de uma execução bem-sucedida, das configurações dos nodes e do callback estão organizadas em [`docs/screenshots/README.md`](docs/screenshots/README.md). Os valores de credenciais não são mostrados.
-
-## Conectar o OpenCode ao MCP do n8n
-
-O projeto inclui `opencode.json` para conectar o OpenCode ao MCP remoto local do n8n. Para habilitar:
-
-1. No n8n, abra **Settings → Instance-level MCP**, habilite o acesso e use **Connect → API key** para gerar um token MCP. Esse token é separado de `N8N_API_TOKEN` e `INTERNAL_API_TOKEN`.
-2. Em **Workflows enabled**, habilite apenas os workflows que o agente deve acessar (por exemplo, AtendeAI). O acesso a workflows habilitados é compartilhado entre clientes MCP dessa instância.
-3. No Windows, crie a variável de ambiente do usuário `N8N_MCP_TOKEN` com o token. Não a coloque no Git nem envie em mensagens.
-4. Confirme que o Server URL exibido pelo n8n é `http://localhost:5678/mcp-server/http`; se for diferente, ajuste o campo `url` em `opencode.json`.
-5. Feche e reinicie o OpenCode para carregar a configuração e a variável. Verifique a conexão em `/mcps` ou com `opencode mcp list`.
-
-O MCP de instância é o modo indicado para pesquisar, criar e editar workflows com um agente; o node `MCP Server Trigger` serve para expor ferramentas de um workflow específico e é outro caso de uso.
-
-Sem essa configuração, a API salva a classificação, mas a automação pode permanecer pendente ou falhar; veja o status do encaminhamento no atendimento. A disponibilidade da API de IA depende das credenciais/provedor do ambiente.
-
-## Testes
+Requer Python 3.11 ou superior. No PowerShell:
 
 ```powershell
-python -m pytest -q
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Os testes usam SQLite temporário e mocks para IA e n8n; não fazem chamadas pagas a serviços externos. Casos de avaliação manual do prompt estão em `prompts/classification_test_cases.json` e cobrem dúvida, reclamação técnica, comercial, financeiro, elogio, ambiguidade, urgência, sentimento negativo sem prioridade alta, prompt injection e mensagem sem sentido.
-
-### Testes do frontend no navegador
-
-Com Node.js instalado e a API/frontend em execução, instale o navegador Playwright uma vez e rode os testes:
+Configure a IA em `.env` e inicie a API, que serve também o frontend:
 
 ```powershell
-npm.cmd --prefix tests/e2e install
-tests\e2e\node_modules\.bin\playwright.cmd install chromium
-npm.cmd --prefix tests/e2e test
+uvicorn app.main:app --reload
 ```
 
-Os testes cobrem Chromium em desktop e viewport móvel, navegação, formulários, erros, Inbox, retentativa, Analytics, temas, movimento reduzido, overflow responsivo e acessibilidade WCAG com axe-core. As respostas da API são fixtures locais: a suíte não chama IA, n8n nem grava atendimentos. Para usar outra URL, defina `ATENDEAI_BASE_URL`.
+Sem um n8n acessível e `N8N_WEBHOOK_URL` configurado, a API pode classificar e persistir atendimentos, mas o encaminhamento permanecerá pendente. Para executar todos os componentes juntos, prefira Compose.
 
-Para gerar capturas reais das telas vazias usando a API em execução:
+## Workflow n8n
 
-```powershell
-npm.cmd --prefix tests/e2e run capture:ui
-```
+O n8n recebe a classificação pronta da API; **a IA não é executada dentro do workflow**. O fluxo valida o payload, direciona para `support`, `financial`, `commercial` ou `customer_service`, registra o destino no callback protegido da API e responde ao webhook.
 
-O script exige banco sem atendimentos e aborta se encontrar registros, para não capturar dados existentes. As imagens são gravadas em `docs/screenshots/frontend/`; capturas já existentes não são sobrescritas. Resultado e detalhes de uma execução real também estão registrados em `classification-result.png` e `attendance-details.png`: foram gerados com uma mensagem sintética, sem dados pessoais, e confirmados contra o registro persistido após o encaminhamento pelo n8n. Essa execução real requer uma chamada ao provedor de IA configurado.
+![Workflow n8n completo do AtendeAI, com validação, quatro departamentos e callback](docs/screenshots/workflow/atendeai-workflow.png)
 
-## Telas
+*Visão geral do workflow publicado na instância usada na demonstração. O arquivo exportado no repositório está inativo por padrão e exige configuração de credenciais antes da publicação.*
 
-- Visão geral com métricas persistidas, evolução, distribuição, recentes e configuração dos serviços.
-- Novo atendimento com formulário, processamento e resultado detalhado.
-- Inbox com busca, filtros, paginação e detalhes.
-- Analytics com distribuição e evolução temporal.
-- Configurações de tema e informações de integrações.
-- Temas claro/escuro, layout responsivo e respeito a `prefers-reduced-motion`.
+![Execução real bem-sucedida do workflow n8n pelo ramo de suporte](docs/screenshots/executions/execution-13-success.png)
 
-Os dados são reais da API; estados vazios são apresentados quando não existem atendimentos. As capturas de resultado e detalhes mostram uma classificação sintética real, sem dados pessoais, encaminhada pelo n8n. Consulte [`docs/screenshots/README.md`](docs/screenshots/README.md) para a descrição e o estado das evidências visuais.
+*Execução demonstrativa com mensagem sintética e callback concluído.*
 
-## Estrutura principal
+Capturas reais das configurações dos nodes de webhook, validação, decisão, roteamento, destinos, tratamento de erros, callback e resposta estão em [`docs/screenshots/`](docs/screenshots/). A documentação detalhada está em [`docs/WORKFLOW_N8N.md`](docs/WORKFLOW_N8N.md).
+
+O [índice visual](docs/screenshots/README.md) relaciona as capturas reais e suas finalidades.
+
+## Configuração e segurança
+
+- `.env.example` contém nomes e valores de exemplo; as credenciais ficam vazias. Copie-o para `.env` e não versione o arquivo local.
+- `.env` e o banco local são ignorados pelo Git. Tokens também devem ser configurados como credenciais no n8n; nunca os inclua no workflow exportado, README ou screenshots.
+- O callback interno exige `INTERNAL_API_TOKEN`; o webhook n8n exige `N8N_API_TOKEN`.
+- O provedor de IA recebe o texto submetido para classificação. Revise as condições de privacidade do provedor e use dados sintéticos ou autorizados.
+- Esta versão não tem autenticação de usuário final e não deve ser exposta publicamente sem controles de acesso e hardening adicionais.
+
+## Estrutura do projeto
 
 ```text
-app/                 API, schemas, modelos, serviços e banco
-frontend/            HTML, CSS e módulos JavaScript
-prompts/              Prompt e casos para avaliação manual
-workflows/            Workflow exportável n8n
-tests/                Testes automatizados com mocks
-docs/                 Arquitetura e organização das capturas reais
-data/                 Banco SQLite local (ignorado pelo Git)
-PLANO_IMPLEMENTACAO.md fases e registro de execução
-AGENTS.md             regras permanentes de trabalho
+app/                 API, schemas, serviços, modelos e persistência
+frontend/            Interface HTML, CSS e JavaScript
+prompts/             Prompt de classificação e casos de avaliação
+workflows/           Exportação JSON do workflow n8n
+tests/               Testes Python e testes de navegador
+scripts/             Sondas para IA e webhook n8n
+docs/                Arquitetura, API, desenvolvimento e workflow
+  screenshots/       Capturas reais do frontend e do n8n
+data/                Banco SQLite local (não versionado)
+Dockerfile           Imagem da API
+docker-compose.yml   API e n8n com persistência
+requirements.txt     Dependências Python
 ```
 
-## Limitações conhecidas e evolução
+## Testes e limitações
 
-- Não há autenticação de usuários finais nesta versão demonstrativa.
-- O destino é demonstrado pelo registro do departamento no backend; não há sistema externo real de atendimento.
-- O provedor precisa suportar Chat Completions e resposta estruturada por `response_format: json_schema` (modo estrito); a resposta também é validada localmente com Pydantic.
-- A conectividade futura com IA/n8n depende das credenciais e da disponibilidade dos serviços externos; as capturas atuais documentam uma execução sintética real, sem dados pessoais.
-- Próximas evoluções possíveis: fila assíncrona, histórico de múltiplas retentativas, autenticação de usuários, migrações Alembic e integrações autorizadas com ferramentas de suporte.
+Os testes de backend usam SQLite temporário e mocks; a suíte Playwright usa respostas da API simuladas. Portanto, testes automatizados não substituem uma validação com credenciais reais e os serviços externos disponíveis.
 
-## Publicação
+- Backend: `python -m pytest -q`
+- Playwright, sondas de integração e detalhes de execução: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)
 
-O repositório está preparado para Git local. Não versionar `.env`, banco local ou credenciais. Não publique o projeto nem faça push sem autorização explícita.
+### Estado atual
+
+- **Implementado:** interface, API, classificação estruturada, persistência SQLite, Inbox, analytics, temas, roteamento demonstrativo para quatro departamentos e callback autenticado do n8n.
+- **Dependente de configuração externa:** classificação real requer credenciais e um provedor compatível; o encaminhamento n8n requer importar o workflow, configurar credenciais e publicá-lo.
+- **Não implementado nesta versão:** login/gestão de usuários e integração com CRM ou plataforma externa de atendimento. SQLite e Compose estão preparados para demonstração local, não para uma implantação multiusuário de produção.
+- **Evoluções possíveis, não disponíveis hoje:** autenticação de usuários, processamento assíncrono, histórico detalhado de cada tentativa e integrações externas autorizadas.
+- **Documentação visual:** inclui capturas reais das telas do frontend, da execução do workflow n8n e das configurações dos nodes e caminhos de erro.
+
+## Contexto do desafio
+
+O AtendeAI foi desenvolvido no contexto do desafio técnico KODIE, com foco em demonstrar a integração entre IA, uma API Python/FastAPI, validação de respostas estruturadas, persistência e automação com n8n. O projeto reúne esses componentes em um fluxo utilizável de ponta a ponta sem afirmar integrações externas que não existem.
+
+## Documentação
+
+- [Arquitetura](docs/architecture.md)
+- [API e contratos](docs/API.md)
+- [Workflow n8n e configuração](docs/WORKFLOW_N8N.md)
+- [Desenvolvimento, testes e sondas](docs/DEVELOPMENT.md)
+- [Índice das capturas reais](docs/screenshots/README.md)
+
+---
+
+Desenvolvido no contexto do desafio técnico KODIE, com foco na integração entre IA, API, persistência e automação.
