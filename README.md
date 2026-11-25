@@ -193,7 +193,7 @@ AGENTS.md             regras permanentes de trabalho
 
 - Não há autenticação de usuários finais nesta versão demonstrativa.
 - O destino é demonstrado pelo registro do departamento no backend; não há sistema externo real de atendimento.
-- O provedor precisa suportar Chat Completions e `response_format: json_object`; ainda assim, a resposta é validada localmente.
+- O provedor precisa suportar Chat Completions e resposta estruturada por `response_format: json_schema` (modo estrito); a resposta também é validada localmente com Pydantic.
 - A conectividade futura com IA/n8n depende das credenciais e da disponibilidade dos serviços externos; as capturas atuais documentam uma execução sintética real, sem dados pessoais.
 - Próximas evoluções possíveis: fila assíncrona, histórico de múltiplas retentativas, autenticação de usuários, migrações Alembic e integrações autorizadas com ferramentas de suporte.
 

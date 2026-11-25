@@ -4,14 +4,14 @@ Este arquivo é o registro de execução do projeto. Atualize os estados, result
 
 ## Estado atual
 
-- **Fase em andamento neste clone:** fases 5–7 concluídas com validação Playwright em desktop/mobile, revisão das capturas reais e correções de acessibilidade/responsividade. O fluxo integrado com `gemini-3.5-flash-lite` já foi validado. As capturas reais do frontend e do n8n foram concluídas; resta a revisão final da entrega.
+- **Fase em andamento neste clone:** fases 1–9 concluídas para o escopo local/demonstrativo. A revisão técnica passou em 25 testes Python, 22 testes Playwright (desktop/mobile, incluindo axe-core), `compileall`, `docker compose config --quiet`, healthchecks da API/n8n e sonda autenticada do webhook n8n. O banco permaneceu vazio.
 - **Última atualização:** 2026-11-25.
-- **Histórico da máquina anterior:** as fases e validações registradas abaixo descrevem a execução anterior e não substituem as verificações neste clone. A inspeção desta máquina encontrou o projeto versionado na branch `main`, sincronizada com `origin/main`; não havia alterações rastreadas pendentes.
+- **Histórico da máquina anterior:** as fases e validações registradas abaixo descrevem a execução anterior e não substituem as verificações neste clone. A branch `main` está sincronizada com `origin/main`. A revisão começou com uma alteração local não commitada em `PLANO_IMPLEMENTACAO.md`; seu conteúdo foi preservado durante os ajustes.
 - **Fase 1:** concluída com este plano e as regras de trabalho em `AGENTS.md`.
 - **Ambiente local atual:** `uv 0.13.10`, CPython `3.11.18`, `.venv311` com dependências instaladas. O `.env` permanece ignorado pelo Git; somente `APP_PORT` foi ajustada localmente para `8001`, preservando o uso da porta `8000` pelo outro projeto.
-- **Validação neste clone:** `25 passed, 1 warning` com Pytest no Python 3.11; `22 passed` em Playwright (desktop Chromium e viewport móvel); `docker compose config --quiet` passou. API e n8n estão saudáveis; `/health` retorna HTTP 200; o banco foi confirmado vazio após a validação visual.
-- **n8n atual:** workflow importado e ativo, com credenciais funcionando: a sonda autenticada alcançou o callback e o teste sintético completou o encaminhamento. Volume persistente mantido. Nenhuma chamada adicional à IA foi feita durante a validação das fases 5–7.
-- **Critério de transparência:** distinguir sempre entre implementado, testado automaticamente, testado manualmente, dependente de configuração/credenciais e pendente de execução externa.
+- **Validação neste clone:** Pytest — `25 passed, 1 warning` de depreciação Starlette/httpx; Playwright — `22 passed` em Chromium desktop e mobile, sem violações críticas/sérias de acessibilidade; `compileall` e `docker compose config --quiet` passaram. API e n8n retornaram HTTP 200 nos healthchecks. A sonda autenticada retornou `N8N_WEBHOOK=ACTIVE`, `WEBHOOK_AUTH=OK`, `INTERNAL_API_AUTH=OK` e alcançou o callback; as tabelas `attendances`, `classifications` e `routings` permaneceram vazias.
+- **n8n atual:** workflow importado e ativo; a imagem da API foi reconstruída sem remover o volume persistente do n8n. A sonda confirmou webhook e callback sem criar atendimento. Nenhuma chamada real à IA foi feita nesta revisão.
+- **Credenciais locais:** por decisão do usuário, não serão rotacionadas neste projeto pessoal/local. Para evitar recorrência de exposição em diagnósticos, `AGENTS.md` determina usar somente `docker compose config --quiet` e proíbe imprimir variáveis de ambiente.
 - **Critério de transparência:** distinguir sempre entre implementado, testado automaticamente, testado manualmente, dependente de configuração/credenciais e pendente de execução externa.
 
 ## Princípios e decisões de arquitetura
@@ -66,7 +66,7 @@ FastAPI persiste atendimento → classifica via serviço de IA → valida/persis
 - [x] **Fase 6 — Funcionalidades do frontend.** Navegação, criação/validação/resultado/erro, Inbox, filtros/paginação/detalhes/retentativa, Analytics e Configurações percorridos em Chromium desktop e mobile. A suíte usa respostas isoladas e não grava dados nem chama IA/n8n.
 - [x] **Fase 7 — Animações e acabamento.** Movimento reduzido, foco por teclado, estado acessível do menu móvel e acessibilidade WCAG verificados com axe-core nos principais estados/telas e nos dois temas; sem violações críticas ou sérias.
 - [x] **Fase 8 — Docker e integração completa.** Dockerfile e Compose construídos; API e n8n saudáveis, comunicação interna confirmada e persistência do SQLite/workflow/credenciais verificada após reiniciar os containers neste clone.
-- [ ] **Fase 9 — Testes e documentação.** README, arquitetura, Playwright e capturas reais do frontend/n8n atualizados; 25 testes Python e 22 cenários de navegador passaram. **Pendente:** revisão final da entrega.
+- [x] **Fase 9 — Testes e documentação.** README, arquitetura, Playwright e capturas reais do frontend/n8n atualizados. Revalidação em 2026-11-25: 25 testes Python, 22 cenários de navegador, `compileall`, Compose, healthchecks e sonda autenticada n8n passaram; banco sem registros. Proteção para diagnósticos do Compose registrada em `AGENTS.md`.
 
 ## Estrutura de arquivos planejada
 
@@ -235,7 +235,7 @@ Manter a estrutura simples e sem camadas vazias; ajustá-la se o repositório ev
 - **Capturas reais:** `npm.cmd --prefix tests/e2e run capture:ui` criou `new-attendance.png`, `inbox.png`, `analytics.png`, `settings-dark.png`, `settings-light.png`, `mobile-dashboard.png` e `mobile-inbox.png` em `docs/screenshots/frontend/`. O script consulta a API real e recusa capturar se houver atendimentos no banco; a API retornou `total=0`. A captura anterior `dashboard.png` foi preservada.
 - **Resultado:** Playwright — 22 testes passaram (11 por viewport); axe-core — nenhuma violação crítica/séria nas telas e temas avaliados. Revisão visual das capturas confirmou os principais layouts desktop/mobile, incluindo os estados vazios e formulário. Os testes de resultado/detalhes usam fixtures isoladas apenas como artefatos de inspeção e não são publicados como prova de execução real.
 - **Demais verificações:** Pytest — 25 passaram, 1 aviso de depreciação Starlette/httpx; `compileall`, sintaxe dos testes Playwright, `docker compose config --quiet` passaram. `npm install` reportou zero vulnerabilidades. API e n8n permaneceram saudáveis; banco SQLite continuou vazio. A imagem da API foi reconstruída para servir os arquivos atualizados; volumes não foram removidos.
-- **Pendências:** não foi feita chamada adicional ao provedor de IA nem criada classificação real para captura. Resultado/detalhes com dados reais e documentação visual do n8n ficam para a fase 9.
+- **Registro à época:** naquela validação não foi feita chamada adicional ao provedor de IA nem criada classificação real para captura; as evidências de resultado/detalhes e do n8n foram concluídas posteriormente na Fase 9.
 
 ### Capturas reais de resultado e detalhes — 2026-11-25
 
@@ -243,13 +243,20 @@ Manter a estrutura simples e sem camadas vazias; ajustá-la se o repositório ev
 - **Execução demonstrativa:** Playwright enviou pela interface uma mensagem sintética, sem dados pessoais. O `POST /api/v1/attendances` retornou HTTP 201; classificação `request/support/medium`, confiança 1.0, sem revisão humana; encaminhamento n8n `completed`, atendimento `routed` e execução n8n `13`. O endpoint de detalhes confirmou a mesma execução persistida.
 - **Capturas revisadas:** `docs/screenshots/frontend/classification-result.png` mostra o resultado real; `docs/screenshots/frontend/attendance-details.png` mostra os detalhes retornados pela API. Ambas foram visualmente inspecionadas e não contêm credenciais ou dados pessoais.
 - **Limpeza:** uma primeira submissão sintética foi removida exatamente após a revisão detectar problema de codificação no texto da captura. Após validar as capturas finais, o segundo registro também foi removido pelo ID exato; os totais de `attendances`, `classifications` e `routings` voltaram a zero. A execução n8n `13` permanece no histórico do n8n para as capturas visuais.
-- **Pendência:** o n8n exige login na interface. Foi aberta uma janela local temporária do Playwright para autenticação manual; nenhuma senha foi solicitada ou registrada. Após login, capturar workflow, execução e configurações seguras dos nodes, remover o registro sintético e confirmar o banco vazio.
-
 ### Capturas reais do n8n — 2026-11-25
 
-- **Login/diagnóstico:** a autenticação fornecida foi aceita em um contexto Chromium limpo. O workflow carregou como publicado e as chamadas normais da interface retornaram HTTP 200, sem erros JavaScript. Os relógios do host e do container estavam sincronizados; o token observado tinha expiração futura. Uma chamada manual isolada ao REST sem o header `browser-id` retornou 401 e não representava o fluxo normal do editor. Nenhuma senha ou token foi registrada no repositório.
+- **Interface:** as capturas foram realizadas no workflow publicado pela interface real do n8n.
 - **Execução documentada:** workflow `AtendeAI — Roteamento de atendimentos`, ativo/publicado; execução real `13`, sucesso em 154 ms, ramo `support`, callback ao FastAPI HTTP 200 e retorno `completed`. A captura foi feita na UI real do n8n.
 - **Capturas:** `docs/screenshots/workflow/atendeai-workflow.png`; `docs/screenshots/executions/execution-13-success.png`; configurações em `docs/screenshots/nodes/`; dados do callback e resposta em `docs/screenshots/results/`.
-- **Segurança/revisão:** imagens revisadas; nenhuma chave ou valor de credencial aparece. Os detalhes do callback contêm somente campos sintéticos de roteamento e cabeçalhos de resposta não sensíveis. A sessão autenticada temporária foi armazenada fora do repositório e removida após as capturas.
+- **Segurança/revisão:** imagens revisadas; nenhuma chave ou valor de credencial aparece. Os detalhes do callback contêm somente campos sintéticos de roteamento e cabeçalhos de resposta não sensíveis.
 - **Limpeza final:** o atendimento sintético exato já havia sido removido; `attendances`, `classifications` e `routings` permaneceram vazias. A API e o n8n permaneceram saudáveis.
-- **Pendência geral:** revisão final da entrega da Fase 9.
+- **Pendência registrada à época:** revisão final da entrega; concluída conforme a seção seguinte.
+
+### Revisão final da entrega — 2026-11-25
+
+- **Ajustes:** documentação do README alinhada ao uso de `response_format: json_schema` estrito; tokens de texto roxo e secundário do tema escuro ajustados para atingir contraste; auditoria axe-core configurada para reduzir movimento e evitar medir estados transitórios de animação.
+- **Validação executada:** `.venv311\Scripts\python.exe -m pytest -q` — 25 passaram, 1 aviso de depreciação Starlette/httpx; `npm.cmd --prefix tests/e2e test` — 22 passaram em desktop/mobile, incluindo auditoria axe-core; `compileall` passou; `docker compose config --quiet` passou; API e n8n saudáveis com HTTP 200; tabelas `attendances`, `classifications` e `routings` com zero registros. A imagem da API foi reconstruída; o container e o volume do n8n foram mantidos.
+- **Credenciais e prevenção:** o usuário decidiu não rotacionar as credenciais por se tratar de um projeto pessoal/local. Para prevenir recorrência, `AGENTS.md` agora proíbe a saída detalhada do Compose em ambiente com `.env` e orienta validar com `docker compose config --quiet`. Nenhum valor de credencial foi adicionado a arquivos do repositório.
+- **Escopo externo:** nenhuma chamada real ao provedor de IA ou ao webhook n8n foi realizada nesta revisão; a validação ponta a ponta existente permanece documentada acima.
+- **Conectividade:** `docker compose exec -T api python -m scripts.check_n8n_webhook` confirmou webhook ativo, autenticação do webhook, autenticação interna e callback alcançável. A sonda usa UUID inexistente e não cria registros. Os healthchecks da API e do n8n retornaram HTTP 200.
+- **Próxima etapa:** nenhuma ação necessária para o escopo local/demonstrativo. Não fazer commit ou push sem autorização explícita.

@@ -334,6 +334,7 @@ test('a navegação por teclado tem foco visível e não foca o menu móvel fech
 
 test('não apresenta violações críticas ou sérias de acessibilidade nas telas e temas', async ({ page }) => {
   test.setTimeout(90_000);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await installApiMocks(page, { records: [failedAttendance] });
   await page.goto('/');
   for (const theme of ['light', 'dark']) {
