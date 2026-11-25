@@ -57,17 +57,30 @@ if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 
 Edite `.env` e informe ao menos `AI_API_KEY` e `AI_MODEL` para classificação real. `AI_BASE_URL` pode apontar para qualquer provedor compatível. Para rodar somente a API/frontend sem IA, os serviços sobem, mas criação de atendimento retorna erro de configuração até que a IA seja configurada.
 
-Para Gemini via Google AI Studio, a base compatível é `https://generativelanguage.googleapis.com/v1beta/openai/`; configure o identificador exato do modelo disponibilizado para sua conta. A combinação `gemini-3.8-flash` foi testada nesta execução. `AI_TIMEOUT` (padrão 90 s) limita o tempo total da classificação, incluindo tentativas; o frontend aguarda até 180 s para cobrir classificação e encaminhamento.
+O `.env.example` usa Gemini via Google AI Studio: `AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/` e `AI_MODEL=gemini-3.5-flash-lite`, um modelo gratuito otimizado para tarefas leves e de alto volume, como extração/classificação. A disponibilidade e os limites gratuitos variam por projeto/modelo; confira os limites ativos no AI Studio. No nível gratuito, o Google pode usar o conteúdo para melhorar produtos — use mensagens sintéticas e não envie dados pessoais ou confidenciais. `AI_TIMEOUT` (padrão 90 s) limita o tempo total da classificação, incluindo tentativas; o frontend aguarda até 180 s para cobrir classificação e encaminhamento.
 
 Falhas temporárias HTTP `429`, `500`, `502`, `503` e `504` são repetidas até `AI_MAX_RETRIES` vezes (padrão 2, máximo 3 retries), com espera exponencial curta e respeito limitado ao `Retry-After` numérico. Use `AI_MAX_RETRIES=0` para desativar tentativas. Erros de autenticação/configuração e timeouts não são repetidos; se a indisponibilidade persistir, a API retorna uma mensagem orientando tentar novamente.
 
-Para fazer uma checagem real e pontual da configuração do provedor (envia uma mensagem sintética e não imprime a chave), use:
+A classificação solicita JSON Schema estrito com enums e valida novamente o resultado com Pydantic. Se a saída for inválida, os logs registram somente a etapa e os nomes/tipos dos campos com erro — nunca a mensagem do cliente nem o conteúdo bruto do provedor.
+
+Para testar a IA diretamente, o script envia uma mensagem ao provedor, valida a resposta com o mesmo schema usado pela aplicação e imprime o resultado em JSON, o modelo e a duração. A chave e a entrada completa não são impressas; como o resumo gerado pode refletir o conteúdo, prefira mensagens sintéticas ou autorizadas. Por padrão, usa uma mensagem sintética e **não faz retries** para evitar chamadas externas inesperadas:
 
 ```powershell
 python -m scripts.check_ai_connection
 ```
 
-Se a solicitação expirar, a checagem aceita um timeout maior sem alterar o `.env`, por exemplo `python -m scripts.check_ai_connection --timeout 90`.
+Passe uma mensagem própria e, opcionalmente, altere o timeout ou autorize retries transitórios:
+
+```powershell
+python -m scripts.check_ai_connection --message "Não consigo acessar minha conta."
+python -m scripts.check_ai_connection --message "Mensagem sintética" --timeout 45 --max-retries 2
+```
+
+`--max-retries 0` (padrão) faz uma única tentativa; valores de 1 a 3 são retries adicionais. `--timeout` aceita de 1 a 180 segundos e não altera o `.env`. No Docker, execute o script dentro do container para usar a configuração dele:
+
+```powershell
+docker compose exec -T api python -m scripts.check_ai_connection --message "Mensagem sintética"
+```
 
 ```powershell
 uvicorn app.main:app --reload

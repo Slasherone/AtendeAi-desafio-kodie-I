@@ -49,7 +49,21 @@ def test_prompt_and_manual_evaluation_cases_cover_required_scenarios():
 def test_ai_service_parses_a_valid_openai_compatible_response():
     def handler(request: httpx.Request) -> httpx.Response:
         payload = json.loads(request.content)
-        assert payload["response_format"] == {"type": "json_object"}
+        response_format = payload["response_format"]
+        assert response_format["type"] == "json_schema"
+        assert response_format["json_schema"]["name"] == "classification_result"
+        assert response_format["json_schema"]["strict"] is True
+        schema = response_format["json_schema"]["schema"]
+        assert schema["additionalProperties"] is False
+        assert set(schema["required"]) == set(VALID_CLASSIFICATION)
+        assert schema["properties"]["category"]["enum"] == [
+            "question",
+            "complaint",
+            "request",
+            "compliment",
+            "other",
+        ]
+        assert payload["temperature"] == 0
         assert "<customer_message>" in payload["messages"][1]["content"]
         return httpx.Response(200, json={"model": "mock-model", "choices": [{"message": {"content": json.dumps(VALID_CLASSIFICATION)}}]})
 
@@ -160,9 +174,46 @@ def test_ai_service_does_not_retry_authentication_errors(monkeypatch):
     assert attempts == 1
 
 
-@pytest.mark.parametrize("content", ["not json", json.dumps({**VALID_CLASSIFICATION, "priority": "urgent"})])
-def test_ai_service_rejects_invalid_model_output(content):
-    transport = httpx.MockTransport(lambda _request: httpx.Response(200, json={"choices": [{"message": {"content": content}}]}))
+@pytest.mark.parametrize(
+    ("content", "failure_stage"),
+    [
+        ("not json", "json_parse"),
+        (json.dumps({**VALID_CLASSIFICATION, "priority": "urgent"}), "schema_validation"),
+    ],
+)
+def test_ai_service_rejects_invalid_model_output_with_a_safe_stage(content, failure_stage, caplog):
+    transport = httpx.MockTransport(
+        lambda _request: httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
+    )
     service = AIService(Settings(ai_api_key="test-key", ai_model="mock-model"), transport=transport)
-    with pytest.raises(AIServiceError):
+    with pytest.raises(AIServiceError) as exc_info:
         asyncio.run(service.classify("Mensagem"))
+    assert exc_info.value.failure_stage == failure_stage
+    assert "Mensagem" not in caplog.text
+    assert "Falha ao acessar" not in caplog.text
+    assert "not json" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("response_body", "failure_stage"),
+    [
+        ({}, "response_envelope"),
+        ({"choices": [{"message": {"content": None}}]}, "response_content"),
+        (
+            {"choices": [{"finish_reason": "length", "message": {"content": "{"}}]},
+            "truncated_output",
+        ),
+        (
+            {"choices": [{"message": {"content": None, "refusal": "Blocked"}}]},
+            "provider_refusal",
+        ),
+    ],
+)
+def test_ai_service_classifies_invalid_response_shapes(response_body, failure_stage):
+    transport = httpx.MockTransport(lambda _request: httpx.Response(200, json=response_body))
+    service = AIService(Settings(ai_api_key="test-key", ai_model="mock-model"), transport=transport)
+
+    with pytest.raises(AIServiceError) as exc_info:
+        asyncio.run(service.classify("Mensagem sintética"))
+
+    assert exc_info.value.failure_stage == failure_stage

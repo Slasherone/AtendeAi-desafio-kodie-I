@@ -8,4 +8,4 @@ As imagens abaixo devem ser feitas com o AtendeAI e o n8n efetivamente executado
 - `results/`: payload/resultados da execução, sem dados pessoais ou segredos.
 - `frontend/`: Dashboard, Novo atendimento, resultado, Inbox, detalhes, Analytics e temas.
 
-Capturas pendentes de execução real do ambiente e configuração manual do n8n. Até que sejam registradas, esta documentação não declara o fluxo ou a interface validados visualmente.
+Captura disponível: `frontend/dashboard.png`, registrada em 2026-11-24 com o dashboard real em execução, API conectada e estado vazio (sem atendimentos). As capturas das demais telas, mobile, resultado/detalhes e do n8n ainda dependem de navegação e execução visual adicionais; esta imagem isolada não valida a interface completa nem o workflow visualmente.
