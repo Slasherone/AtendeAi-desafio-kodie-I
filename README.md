@@ -1,6 +1,6 @@
 # AtendeAI
 
-**Triagem inteligente de atendimentos, com classificação estruturada e encaminhamento demonstrável.** O AtendeAI combina uma interface web, uma API FastAPI, um provedor de IA compatível com OpenAI Chat Completions, SQLite e uma automação n8n.
+**Triagem inteligente de atendimentos, com classificação estruturada e encaminhamento demonstrável.** O AtendeAI combina interface web, API FastAPI, **Google Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`)**, SQLite e automação n8n. O backend acessa o modelo pela API Gemini compatível com OpenAI Chat Completions.
 
 [![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
 
@@ -9,16 +9,19 @@ O projeto foi desenvolvido como solução demonstrativa para o desafio técnico 
 ## Navegação
 
 - [Problema e proposta](#problema-e-proposta)
+- [IA e classificação com Gemini](#ia-e-classificação-com-gemini)
 - [Funcionalidades](#funcionalidades)
+- [Contexto do desafio](#contexto-do-desafio)
+- [Documentação](#documentação)
 - [Demonstração visual](#demonstração-visual)
 - [Arquitetura e fluxo](#arquitetura-e-fluxo)
+- [Decisões de projeto](#decisões-de-projeto)
 - [Tecnologias](#tecnologias)
-- [Como executar](#como-executar)
-- [Workflow n8n](#workflow-n8n)
-- [Configuração e segurança](#configuração-e-segurança)
 - [Estrutura do projeto](#estrutura-do-projeto)
+- [Workflow n8n](#workflow-n8n)
+- [Como executar](#como-executar)
+- [Configuração e segurança](#configuração-e-segurança)
 - [Testes e limitações](#testes-e-limitações)
-- [Documentação](#documentação)
 
 ## Problema e proposta
 
@@ -27,6 +30,14 @@ Pequenas equipes podem receber mensagens de clientes com dúvidas, reclamações
 O AtendeAI demonstra como organizar essa etapa: a pessoa registra uma mensagem, a API solicita uma classificação estruturada à IA, valida e persiste o resultado e, quando não é necessária revisão humana, aciona o n8n para registrar o departamento de destino. A interface permite acompanhar indicadores e consultar atendimentos.
 
 A classificação inclui categoria, departamento, prioridade, sentimento, resumo, confiança estimada, justificativa e indicação de revisão humana. A confiança é uma estimativa do modelo, não uma garantia estatística. Casos marcados para revisão — ou abaixo do limite configurado — não são encaminhados automaticamente.
+
+## IA e classificação com Gemini
+
+O **Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`) é o motor de classificação do AtendeAI**. Ele transforma cada mensagem livre em dados de triagem estruturados, interpretando conteúdo e intenção — não apenas palavras-chave — e produz categoria, departamento, prioridade, sentimento, resumo, confiança estimada, justificativa e necessidade de revisão humana.
+
+A API envia a mensagem junto ao prompt especializado [`prompts/message_classification.md`](prompts/message_classification.md) e solicita uma resposta em JSON conforme um JSON Schema estrito. Em seguida, o backend valida o resultado com Pydantic, aplica o limite configurado de confiança e decide se o atendimento pode seguir para o n8n ou deve aguardar revisão humana.
+
+O `.env.example` configura esse modelo pelo endpoint Gemini compatível com OpenAI Chat Completions. `AI_MODEL` e `AI_BASE_URL` continuam configuráveis; a classificação permanece no backend e o navegador nunca chama o modelo diretamente.
 
 ## Funcionalidades
 
@@ -39,6 +50,18 @@ A classificação inclui categoria, departamento, prioridade, sentimento, resumo
 - Demonstrar o roteamento para quatro departamentos pelo workflow n8n.
 - Retentar encaminhamentos elegíveis sem apagar a classificação já concluída.
 - Usar a interface em temas claro e escuro, com layout responsivo.
+
+## Contexto do desafio
+
+O AtendeAI foi desenvolvido no contexto do desafio técnico KODIE, com foco em demonstrar a integração entre inteligência artificial, API Python/FastAPI, validação de respostas estruturadas, persistência e automação com n8n. A solução reúne esses componentes em um fluxo demonstrável de ponta a ponta sem afirmar integrações externas que não existem.
+
+## Documentação
+
+- [Arquitetura](docs/architecture.md)
+- [API e contratos](docs/API.md)
+- [Workflow n8n e configuração](docs/WORKFLOW_N8N.md)
+- [Desenvolvimento, testes e sondas](docs/DEVELOPMENT.md)
+- [Índice das capturas reais](docs/screenshots/README.md)
 
 ## Demonstração visual
 
@@ -74,7 +97,7 @@ flowchart TD
     U[Pessoa usuária] --> FE[Frontend HTML CSS JavaScript]
     FE -->|HTTP mesma origem| API[API FastAPI]
     API -->|Carrega| P[Prompt de classificação]
-    API -->|Chat Completions com JSON Schema estrito| AI[Provedor de IA compatível com OpenAI]
+    API -->|Chat Completions com JSON Schema estrito| AI[Google Gemini 3.5 Flash-Lite]
     AI -->|Resposta JSON| API
     API -->|Persiste atendimento e classificação| DB[(SQLite)]
     API -->|Se revisão humana não for necessária| N8N[Webhook n8n]
@@ -95,6 +118,14 @@ flowchart TD
 
 Se o n8n não estiver configurado ou falhar, a classificação permanece armazenada e o estado do encaminhamento pode ser consultado. O n8n demonstra o registro do destino no AtendeAI; não cria chamados em um serviço externo.
 
+## Decisões de projeto
+
+- **Backend como fonte da verdade:** valida entradas e saídas, aplica regras de revisão, persiste os dados e expõe uma API única para o frontend.
+- **Resposta de IA estruturada:** JSON Schema estrito reduz variações no formato; Pydantic faz a validação local antes de persistir.
+- **Gemini e automação com responsabilidades distintas:** o Gemini classifica a mensagem no backend; o n8n decide o ramo e registra o encaminhamento sem incorporar as regras centrais de classificação.
+- **Falha do encaminhamento não apaga a classificação:** os estados de classificação e de roteamento são mantidos separadamente para permitir consulta e retentativa elegível.
+- **Stack leve para demonstração:** frontend sem framework pesado, SQLite e Compose simplificam a execução local do conjunto.
+
 ## Tecnologias
 
 | Categoria | Tecnologias | Uso no projeto |
@@ -102,21 +133,46 @@ Se o n8n não estiver configurado ou falhar, a classificação permanece armazen
 | Frontend | HTML, CSS, JavaScript ES6+ | Interface estática servida pela própria API. |
 | Recursos visuais | Chart.js, Lucide, Google Fonts (DM Sans e Manrope) | Gráficos, ícones e fontes carregados no frontend por CDN. |
 | Backend | Python 3.11+, FastAPI, Pydantic, SQLAlchemy, HTTPX | API, validação, persistência e chamadas HTTP assíncronas. |
-| Inteligência artificial | API compatível com OpenAI Chat Completions | Classificação estruturada com `response_format: json_schema`. O exemplo de ambiente usa Gemini via endpoint compatível. |
+| Inteligência artificial | **Google Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`)** via API Gemini compatível com OpenAI Chat Completions | Classifica cada mensagem e gera os campos estruturados que o backend valida com JSON Schema e Pydantic. |
 | Automação | n8n | Validação do payload, roteamento por departamento e callback à API. |
 | Armazenamento | SQLite | Atendimentos, classificações e encaminhamentos locais. |
 | Infraestrutura | Docker, Docker Compose | Execução da API e do n8n com persistência local. |
 | Testes | Pytest, Playwright, axe-core | Testes de backend e de navegador, incluindo verificações de acessibilidade. |
 
-O cliente de IA usa o protocolo compatível com OpenAI e exige suporte do provedor a JSON Schema estrito. `AI_PROVIDER` não corresponde a uma coleção de adaptadores independentes por fornecedor.
+O modelo de referência é o Gemini 3.5 Flash-Lite; `AI_MODEL` e `AI_BASE_URL` permitem configurar outro endpoint compatível que aceite `response_format: json_schema` estrito. `AI_PROVIDER` não seleciona adaptadores independentes por fornecedor.
 
-## Decisões de projeto
+## Estrutura do projeto
 
-- **Backend como fonte da verdade:** valida entradas e saídas, aplica regras de revisão, persiste os dados e expõe uma API única para o frontend.
-- **Resposta de IA estruturada:** JSON Schema estrito reduz variações no formato; Pydantic faz a validação local antes de persistir.
-- **IA e automação separadas:** a classificação acontece no backend; o n8n decide o ramo e registra o encaminhamento sem incorporar regras centrais de classificação.
-- **Falha do encaminhamento não apaga a classificação:** os estados de classificação e de roteamento são mantidos separadamente para permitir consulta e retentativa elegível.
-- **Stack leve para demonstração:** frontend sem framework pesado, SQLite e Compose simplificam a execução local do conjunto.
+```text
+app/                 API, schemas, serviços, modelos e persistência
+frontend/            Interface HTML, CSS e JavaScript
+prompts/             Prompt de classificação e casos de avaliação
+workflows/           Exportação JSON do workflow n8n
+tests/               Testes Python e testes de navegador
+scripts/             Sondas para IA e webhook n8n
+docs/                Arquitetura, API, desenvolvimento e workflow
+  screenshots/       Capturas reais do frontend e do n8n
+data/                Banco SQLite local (não versionado)
+Dockerfile           Imagem da API
+docker-compose.yml   API e n8n com persistência
+requirements.txt     Dependências Python
+```
+
+## Workflow n8n
+
+O n8n recebe a classificação pronta da API; **a IA não é executada dentro do workflow**. O fluxo valida o payload, direciona para `support`, `financial`, `commercial` ou `customer_service`, registra o destino no callback protegido da API e responde ao webhook.
+
+![Workflow n8n completo do AtendeAI, com validação, quatro departamentos e callback](docs/screenshots/workflow/atendeai-workflow.png)
+
+*Visão geral do workflow publicado na instância usada na demonstração. O arquivo exportado no repositório está inativo por padrão e exige configuração de credenciais antes da publicação.*
+
+![Execução real bem-sucedida do workflow n8n pelo ramo de suporte](docs/screenshots/executions/execution-13-success.png)
+
+*Execução demonstrativa com mensagem sintética e callback concluído.*
+
+Capturas reais das configurações dos nodes de webhook, validação, decisão, roteamento, destinos, tratamento de erros, callback e resposta estão em [`docs/screenshots/`](docs/screenshots/). A documentação detalhada está em [`docs/WORKFLOW_N8N.md`](docs/WORKFLOW_N8N.md).
+
+O [índice visual](docs/screenshots/README.md) relaciona as capturas reais e suas finalidades.
 
 ## Como executar
 
@@ -163,22 +219,6 @@ uvicorn app.main:app --reload
 
 Sem um n8n acessível e `N8N_WEBHOOK_URL` configurado, a API pode classificar e persistir atendimentos, mas o encaminhamento permanecerá pendente. Para executar todos os componentes juntos, prefira Compose.
 
-## Workflow n8n
-
-O n8n recebe a classificação pronta da API; **a IA não é executada dentro do workflow**. O fluxo valida o payload, direciona para `support`, `financial`, `commercial` ou `customer_service`, registra o destino no callback protegido da API e responde ao webhook.
-
-![Workflow n8n completo do AtendeAI, com validação, quatro departamentos e callback](docs/screenshots/workflow/atendeai-workflow.png)
-
-*Visão geral do workflow publicado na instância usada na demonstração. O arquivo exportado no repositório está inativo por padrão e exige configuração de credenciais antes da publicação.*
-
-![Execução real bem-sucedida do workflow n8n pelo ramo de suporte](docs/screenshots/executions/execution-13-success.png)
-
-*Execução demonstrativa com mensagem sintética e callback concluído.*
-
-Capturas reais das configurações dos nodes de webhook, validação, decisão, roteamento, destinos, tratamento de erros, callback e resposta estão em [`docs/screenshots/`](docs/screenshots/). A documentação detalhada está em [`docs/WORKFLOW_N8N.md`](docs/WORKFLOW_N8N.md).
-
-O [índice visual](docs/screenshots/README.md) relaciona as capturas reais e suas finalidades.
-
 ## Configuração e segurança
 
 - `.env.example` contém nomes e valores de exemplo; as credenciais ficam vazias. Copie-o para `.env` e não versione o arquivo local.
@@ -186,23 +226,6 @@ O [índice visual](docs/screenshots/README.md) relaciona as capturas reais e sua
 - O callback interno exige `INTERNAL_API_TOKEN`; o webhook n8n exige `N8N_API_TOKEN`.
 - O provedor de IA recebe o texto submetido para classificação. Revise as condições de privacidade do provedor e use dados sintéticos ou autorizados.
 - Esta versão não tem autenticação de usuário final e não deve ser exposta publicamente sem controles de acesso e hardening adicionais.
-
-## Estrutura do projeto
-
-```text
-app/                 API, schemas, serviços, modelos e persistência
-frontend/            Interface HTML, CSS e JavaScript
-prompts/             Prompt de classificação e casos de avaliação
-workflows/           Exportação JSON do workflow n8n
-tests/               Testes Python e testes de navegador
-scripts/             Sondas para IA e webhook n8n
-docs/                Arquitetura, API, desenvolvimento e workflow
-  screenshots/       Capturas reais do frontend e do n8n
-data/                Banco SQLite local (não versionado)
-Dockerfile           Imagem da API
-docker-compose.yml   API e n8n com persistência
-requirements.txt     Dependências Python
-```
 
 ## Testes e limitações
 
@@ -218,18 +241,6 @@ Os testes de backend usam SQLite temporário e mocks; a suíte Playwright usa re
 - **Não implementado nesta versão:** login/gestão de usuários e integração com CRM ou plataforma externa de atendimento. SQLite e Compose estão preparados para demonstração local, não para uma implantação multiusuário de produção.
 - **Evoluções possíveis, não disponíveis hoje:** autenticação de usuários, processamento assíncrono, histórico detalhado de cada tentativa e integrações externas autorizadas.
 - **Documentação visual:** inclui capturas reais das telas do frontend, da execução do workflow n8n e das configurações dos nodes e caminhos de erro.
-
-## Contexto do desafio
-
-O AtendeAI foi desenvolvido no contexto do desafio técnico KODIE, com foco em demonstrar a integração entre IA, uma API Python/FastAPI, validação de respostas estruturadas, persistência e automação com n8n. O projeto reúne esses componentes em um fluxo utilizável de ponta a ponta sem afirmar integrações externas que não existem.
-
-## Documentação
-
-- [Arquitetura](docs/architecture.md)
-- [API e contratos](docs/API.md)
-- [Workflow n8n e configuração](docs/WORKFLOW_N8N.md)
-- [Desenvolvimento, testes e sondas](docs/DEVELOPMENT.md)
-- [Índice das capturas reais](docs/screenshots/README.md)
 
 ---
 
